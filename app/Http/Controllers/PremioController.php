@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Director;
 use App\Models\Pelicula;
 use App\Models\Premio;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PremioController extends Controller
@@ -29,6 +30,8 @@ class PremioController extends Controller
         $peliculas = Pelicula::all();
         $directores = Director::all();
 
+
+
         return view('premios.create', compact('premio','peliculas', 'directores'));
     }
 
@@ -44,7 +47,61 @@ class PremioController extends Controller
 
         try {
             $nombre = $request->input('nombre');
+            $categoria = $request->input('categoria');
+            $anio = $request->input('anio');
+            $entidadType = $request->input('entidad_type');
+            $entidadId = $request->input('entidad_id');
+            $peliculaId = $request->input('pelicula_id');
             $imagen = $this->getImagenPorNombre($nombre);
+
+
+            if ($entidadType === 'App\Models\Pelicula') {
+                $pelicula = Pelicula::findOrFail($entidadId);
+                $anioEstreno = Carbon::parse($pelicula->estreno)->year;
+                $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
+
+                if ($anio < $anioEstreno) {
+                    return redirect()->back()->withErrors([
+                        'anio' => "El año del premio ($anio) no puede ser anterior al año de estreno de la película ({$anioEstreno})."
+                    ])->withInput();
+                } elseif ($anio > $anioSiguienteEstreno) {
+                    return redirect()->back()->withErrors([
+                        'anio' => "El año del premio ($anio) no puede ser superado por más de un año del año de estreno ({$anioEstreno})."
+                    ])->withInput();
+                }
+            } elseif ($entidadType === 'App\Models\Director' && $peliculaId) {
+                $pelicula = Pelicula::findOrFail($peliculaId);
+                $director = Director::findOrFail($entidadId);
+                $anioEstreno = Carbon::parse($pelicula->estreno)->year;
+                $anioNacDirector = Carbon::parse($director->fecha_nac)->year;
+                $anioInicioActividad = Carbon::parse($director->inicio_actividad)->year;
+
+                if ($anio < $anioEstreno) {
+                    return redirect()->back()->withErrors([
+                        'anio' => "El año del premio ($anio) no puede ser anterior al año de estreno de la película ({$anioEstreno})."
+                    ])->withInput();
+                }elseif ($anio < $anioNacDirector) {
+                    return redirect()->back()->withErrors([
+                        'anio' => "El año del premio ($anio) no puede ser anterior al año de nacimiento del director ({$anioNacDirector})."
+                    ])->withInput();
+                } elseif ($anio < $anioInicioActividad) {
+                    return redirect()->back()->withErrors([
+                        'anio' => "El año del premio ($anio) no puede ser anterior al año de inicio de actividad del director ({$anioInicioActividad})."
+                    ])->withInput();
+                }
+            }
+
+            // Verificar si ya existe el premio
+            $premioExistente = Premio::where('nombre', $nombre)
+                ->where('categoria', $categoria)
+                ->where('anio', $anio)
+                ->exists();
+
+            if ($premioExistente) {
+                return redirect()->back()->withErrors([
+                    'error' => 'Ya hay un premio con esas características asociado a una entidad.'
+                ])->withInput();
+            }
 
             switch ($request->input('entidad_type')) {
                 case 'App\Models\Pelicula':
@@ -65,7 +122,9 @@ class PremioController extends Controller
             return redirect()->route('premios.show', $premio->id)->with('success', 'Premio creado correctamente');
 
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al crear el premio.' . $e->getMessage()]);
+            return redirect()->back()->withErrors([
+                'error' => 'Error al crear el premio.' . $e->getMessage()
+            ])->withInput();
         }
 
     }

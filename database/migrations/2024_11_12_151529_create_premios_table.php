@@ -20,6 +20,7 @@ return new class extends Migration
             $table->morphs('entidad');
             $table->foreignId('pelicula_id')->nullable()->constrained('peliculas')->onDelete('set null');
             $table->string('imagen')->default(Premio::$IMAGEN_DEFAULT);
+            $table->unique(['nombre', 'categoria', 'anio'], 'premios_unicos');
             $table->softDeletes();
             $table->timestamps();
         });
