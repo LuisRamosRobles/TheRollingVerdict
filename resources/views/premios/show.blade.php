@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    <a class="btn btn-success mb-4" href="{{route('premios.edit', $premio->id)}}">Actualizar Director</a>
+    <a class="btn btn-success mb-4" href="{{route('premios.edit', $premio->id)}}">Actualizar Premio</a>
     <a class="btn btn-secondary mx-2 mb-4" href="{{ route('premios.index') }}">Volver</a>
     <form action="{{ route('premios.destroy', $premio->id) }}" method="POST" style="display: inline;">
         @csrf
