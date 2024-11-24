@@ -56,6 +56,13 @@ class DirectorController extends Controller
                 ? Carbon::parse($request->input('inicio_actividad'))->year
                 : null;
 
+            // Validar coherencia entre fechas
+            if ($inicioActividadYear && $nacimientoYear && $inicioActividadYear < $nacimientoYear) {
+                return redirect()->back()->withErrors([
+                    'inicio_actividad' => 'La fecha de inicio de actividad no puede ser anterior a la fecha de nacimiento.'
+                ])->withInput();
+            }
+
             $data = $request->except(['imagen', 'premios']);
             $data['fecha_nac'] = $request->filled('fecha_nac') ? $request->input('fecha_nac') : null;
             $data['inicio_actividad'] = $request->filled('inicio_actividad') ? $request->input('inicio_actividad') : null;
@@ -67,30 +74,45 @@ class DirectorController extends Controller
                         return redirect()->back()
                             ->withErrors([
                                 "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del director ({$nacimientoYear})."
-                            ])
-                            ->withInput();
+                            ])->withInput();
                     }
 
                     if ($inicioActividadYear && $premio['anio'] < $inicioActividadYear) {
                         return redirect()->back()
                             ->withErrors([
                                 "premios.{$index}.anio" => "El año del premio no puede ser  anterior al inicio de actividad del director ({$inicioActividadYear})."
-                            ])
-                            ->withInput();
+                            ])->withInput();
                     }
+
+                    if (!empty($premio['pelicula_id'])) {
+                        $pelicula = Pelicula::findOrFail($premio['pelicula_id']);
+                        if ($pelicula) {
+                            $anioEstreno = Carbon::parse($pelicula->estreno)->year;
+                            $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
+
+                            if ($premio['anio'] < $anioEstreno) {
+                                return redirect()->back()->withErrors([
+                                    'anio' => "El año del premio debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
+                                ])->withInput();
+                            } elseif ($premio['anio'] > $anioSiguienteEstreno) {
+                                return redirect()->back()->withErrors([
+                                    'anio' => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
+                                ])->withInput();
+                            }
+                        }
+                    }
+
+                    if ($this->validarPremiosDuplicados($premio)) {
+                        return redirect()->back()->withErrors([
+                            'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
+                        ])->withInput();
+                    }
+
                 }
             }
 
+
             $director = Director::create($data);
-
-
-
-            // Validar coherencia entre fechas
-            if ($nacimientoYear && $inicioActividadYear && $inicioActividadYear < $nacimientoYear) {
-                return redirect()->back()->withErrors([
-                    'inicio_actividad' => 'La fecha de inicio de actividad no puede ser anterior a la fecha de nacimiento.'
-                ])->withInput();
-            }
 
             if ($request->has('premios')) {
                 foreach ($request->input('premios', []) as $premioData) {
@@ -111,7 +133,7 @@ class DirectorController extends Controller
             $director->save();
             return redirect()->route('directores.show', $director->id)->with('success', 'Director creado correctamente.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al crear la película.']);
+            return redirect()->back()->withErrors(['error' => 'Error al crear la película.' . $e->getMessage()]);
         }
     }
 
@@ -140,6 +162,59 @@ class DirectorController extends Controller
         try {
             $director = Director::findOrFail($id);
 
+            $nacimientoYear = $request->filled('fecha_nac')
+                ? Carbon::parse($request->input('fecha_nac'))->year
+                : ($director->fecha_nac ? Carbon::parse($director->fecha_nac)->year : null);
+
+            $inicioActividadYear = $request->filled('inicio_actividad')
+                ? Carbon::parse($request->input('inicio_actividad'))->year
+                : ($director->inicio_actividad ? Carbon::parse($director->inicio_actividad)->year : null);
+
+            // Validar coherencia entre fechas
+            if ($inicioActividadYear && $nacimientoYear && $inicioActividadYear < $nacimientoYear) {
+                return redirect()->back()->withErrors([
+                    'inicio_actividad' => 'La fecha de inicio de actividad no puede ser anterior a la fecha de nacimiento.'
+                ])->withInput();
+            }
+
+            foreach ($request->input('premios', []) as $index => $premio) {
+                if ($nacimientoYear && $premio['anio'] < $nacimientoYear) {
+                    return redirect()->back()->withErrors([
+                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del director ({$nacimientoYear})."
+                    ])->withInput();
+                }
+
+                if ($inicioActividadYear && $premio['anio'] < $inicioActividadYear) {
+                    return redirect()->back()->withErrors([
+                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al inicio de actividad del director ({$inicioActividadYear})."
+                    ])->withInput();
+                }
+
+                if (!empty($premio['pelicula_id'])) {
+                    $pelicula = Pelicula::findOrFail($premio['pelicula_id']);
+                    if ($pelicula) {
+                        $anioEstreno = Carbon::parse($pelicula->estreno)->year;
+                        $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
+
+                        if ($premio['anio'] < $anioEstreno) {
+                            return redirect()->back()->withErrors([
+                                'anio' => "El año del premio debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
+                            ])->withInput();
+                        } elseif ($premio['anio'] > $anioSiguienteEstreno) {
+                            return redirect()->back()->withErrors([
+                                'anio' => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
+                            ])->withInput();
+                        }
+                    }
+                }
+
+                if ($this->validarPremiosDuplicados($premio)) {
+                    return redirect()->back()->withErrors([
+                        'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
+                    ])->withInput();
+                }
+            }
+
             $director->update($request->except('imagen', 'premios', 'premios_eliminar'));
 
             $premiosIds = [];
@@ -164,16 +239,6 @@ class DirectorController extends Controller
                     ->delete(); // Soft delete
             }
 
-            if ($request->filled('fecha_nac') && $request->filled('inicio_actividad')) {
-                $fechaNac = Carbon::parse($request->input('fecha_nac'));
-                $inicioActividad = Carbon::parse($request->input('inicio_actividad'));
-
-                if ($inicioActividad < $fechaNac) {
-                    return redirect()->back()->withErrors([
-                        'inicio_actividad' => 'La fecha de inicio de actividad no puede ser anterior a la fecha de nacimiento.'
-                    ])->withInput();
-                }
-            }
 
             if ($request->hasFile('imagen')) {
 
@@ -280,5 +345,13 @@ class DirectorController extends Controller
         $imagen = $imagenesPremios[$nombreMin] ?? Premio::$IMAGEN_DEFAULT;
 
         return $imagen;
+    }
+
+    private function validarPremiosDuplicados($premio) {
+        return Premio::where('nombre', $premio['nombre'])
+            ->where('categoria', $premio['categoria'])
+            ->where('anio', $premio['anio'])
+            ->where('id', '!=', $premio['id'] ?? null)
+            ->exists();
     }
 }

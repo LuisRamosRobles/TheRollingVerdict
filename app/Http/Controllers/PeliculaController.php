@@ -53,21 +53,48 @@ class PeliculaController extends Controller
 
         try {
 
-            $estrenoYear = $request->filled('estreno')
+            $director = Director::find($request->input('director_id'));
+            $inicioActividadYear = $director->inicio_actividad
+                ? Carbon::parse($director->inicio_actividad)->year
+                : null;
+
+            $anioEstreno = $request->filled('estreno')
                 ? Carbon::parse($request->input('estreno'))->year
                 : null;
 
+            $anioSiguienteEstreno = $request->filled('estreno')
+                ? Carbon::parse($request->input('estreno'))->addYear()->year
+                : null;
+
+            if ($anioEstreno && $inicioActividadYear && $anioEstreno < $inicioActividadYear) {
+                return redirect()->back()->withErrors([
+                    'estreno' => "La fecha de estreno ($anioEstreno) no puede ser anterior al inicio de actividad del director ($inicioActividadYear)."
+                ])->withInput();
+            }
+
             if ($request->has('premios')) {
                 foreach ($request->input('premios') as $index => $premio) {
-                    if ($estrenoYear && $premio['anio'] < $estrenoYear) {
+                    if ($anioEstreno && $premio['anio'] < $anioEstreno) {
                         return redirect()->back()
                             ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de estreno de la película ({$estrenoYear})."
-                            ])
-                            ->withInput();
+                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de estreno de la película ({$anioEstreno})."
+                            ])->withInput();
+                    } elseif ($anioSiguienteEstreno && $premio['anio'] > $anioSiguienteEstreno) {
+                        return redirect()->back()
+                            ->withErrors([
+                                "premios.{$index}.anio" => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
+                            ])->withInput();
                     }
+
+                    if ($this->validarPremiosDuplicados($premio)) {
+                        return redirect()->back()->withErrors([
+                            'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
+                        ])->withInput();
+                    }
+
                 }
             }
+
 
             $pelicula = Pelicula::create($request->except(['imagen', 'generos','premios']));
 
@@ -96,7 +123,7 @@ class PeliculaController extends Controller
             return redirect()->route('peliculas.show', $pelicula->id)->with('success', 'Película creada con éxito.');
         } catch (\Exception $e) {
 
-            return redirect()->back()->withErrors(['error' => 'Error al crear la película.']);
+            return redirect()->back()->withErrors(['error' => 'Error al crear la película.' . $e->getMessage()]);
         }
     }
 
@@ -127,19 +154,46 @@ class PeliculaController extends Controller
         try{
             $pelicula = Pelicula::findOrFail($id);
 
-            $estrenoYear = $request->filled('estreno')
+            $director = Director::find($request->input('director_id'));
+            $inicioActividadYear = $director->inicio_actividad
+                ? Carbon::parse($director->inicio_actividad)->year
+                : null;
+
+            $anioEstreno = $request->filled('estreno')
                 ? Carbon::parse($request->input('estreno'))->year
                 : null;
 
+            $anioSiguienteEstreno = $request->filled('estreno')
+                ? Carbon::parse($request->input('estreno'))->addYear()->year
+                : null;
+
+            if ($anioEstreno && $inicioActividadYear && $anioEstreno < $inicioActividadYear) {
+                return redirect()->back()->withErrors([
+                    'estreno' => "La fecha de estreno ($anioEstreno) no puede ser anterior al inicio de actividad del director ($inicioActividadYear)."
+                ])->withInput();
+            }
+
             if ($request->has('premios')) {
                 foreach ($request->input('premios') as $index => $premio) {
-                    if ($estrenoYear && $premio['anio'] < $estrenoYear) {
+                    if ($anioEstreno && $premio['anio'] < $anioEstreno) {
                         return redirect()->back()
                             ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de estreno de la película ({$estrenoYear})."
+                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de estreno de la película ({$anioEstreno})."
                             ])
                             ->withInput();
+                    } elseif ($anioSiguienteEstreno && $premio['anio'] > $anioSiguienteEstreno) {
+                        return redirect()->back()
+                            ->withErrors([
+                                "premios.{$index}.anio" => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
+                            ])->withInput();
                     }
+
+                    if ($this->validarPremiosDuplicados($premio)) {
+                        return redirect()->back()->withErrors([
+                            'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
+                        ])->withInput();
+                    }
+
                 }
             }
 
@@ -185,7 +239,7 @@ class PeliculaController extends Controller
             $pelicula->save();
             return redirect()->route('peliculas.show', $pelicula->id)->with('success', 'Película actualizada con éxito.');
         } catch (\Exception $e){
-            return redirect()->back()->withErrors(['error' => 'Error al actualizar la película.']);
+            return redirect()->back()->withErrors(['error' => 'Error al actualizar la película.' . $e->getMessage()]);
         }
     }
 
@@ -286,5 +340,13 @@ class PeliculaController extends Controller
         $imagen = $imagenesPremios[$nombreMin] ?? Premio::$IMAGEN_DEFAULT;
 
         return $imagen;
+    }
+
+    private function validarPremiosDuplicados($premio) {
+        return Premio::where('nombre', $premio['nombre'])
+            ->where('categoria', $premio['categoria'])
+            ->where('anio', $premio['anio'])
+            ->where('id', '!=', $premio['id'] ?? null)
+            ->exists();
     }
 }

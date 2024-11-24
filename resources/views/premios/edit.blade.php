@@ -52,7 +52,8 @@
         </div>
 
         <!-- Select para elegir la película (invisible por defecto) -->
-        <div class="form-group" id="pelicula-select" style="display: none;">
+        <div class="form-group" id="pelicula-select"
+             style="display: {{ $premio->entidad_type == 'App\Models\Director' && $premio->pelicula_id ? 'block' : 'none' }};">
             <label for="pelicula_id">Película:</label>
             <select class="form-control" id="pelicula_id" name="pelicula_id">
                 <option value="">Seleccione una película</option>
@@ -100,6 +101,14 @@
             const peliculas = @json($peliculas);
             const directores = @json($directores);
 
+            function inicializarFormulario() {
+                if (directorRadio.checked) {
+                    peliculaSelect.style.display = "{{ $premio->pelicula_id ? 'block' : 'none' }}";
+                } else {
+                    peliculaSelect.style.display = "none";
+                }
+            }
+
             function actualizarOpciones() {
                 entidadSelect.innerHTML = "";
 
@@ -126,6 +135,7 @@
                 actualizarOpciones();
             });
 
+            inicializarFormulario();
             actualizarOpciones();
         });
     </script>

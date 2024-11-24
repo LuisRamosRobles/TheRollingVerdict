@@ -69,23 +69,29 @@ class PremioController extends Controller
                         'anio' => "El año del premio ($anio) debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente($anioSiguienteEstreno)."
                     ])->withInput();
                 }
-            } elseif ($entidadType === 'App\Models\Director' && $peliculaId) {
-                $pelicula = Pelicula::findOrFail($peliculaId);
+            } elseif ($entidadType === 'App\Models\Director') {
                 $director = Director::findOrFail($entidadId);
-                $anioEstreno = Carbon::parse($pelicula->estreno)->year;
-                $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
                 $anioNacDirector = Carbon::parse($director->fecha_nac)->year;
                 $anioInicioActividad = Carbon::parse($director->inicio_actividad)->year;
 
-                if ($anio < $anioEstreno) {
-                    return redirect()->back()->withErrors([
-                        'anio' => "El año del premio ($anio) debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
-                    ])->withInput();
-                } elseif ($anio > $anioSiguienteEstreno) {
-                    return redirect()->back()->withErrors([
-                        'anio' => "El año del premio ($anio) debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
-                    ])->withInput();
-                } elseif ($anio < $anioNacDirector) {
+                if ($peliculaId) {
+                    // Validar los años en relación con la película asociada
+                    $pelicula = Pelicula::findOrFail($peliculaId);
+                    $anioEstreno = Carbon::parse($pelicula->estreno)->year;
+                    $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
+
+                    if ($anio < $anioEstreno) {
+                        return redirect()->back()->withErrors([
+                            'anio' => "El año del premio ($anio) debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
+                        ])->withInput();
+                    } elseif ($anio > $anioSiguienteEstreno) {
+                        return redirect()->back()->withErrors([
+                            'anio' => "El año del premio ($anio) debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
+                        ])->withInput();
+                    }
+                }
+
+                if ($anio < $anioNacDirector) {
                     return redirect()->back()->withErrors([
                         'anio' => "El año del premio ($anio) no puede ser anterior al año de nacimiento del director ($anioNacDirector)."
                     ])->withInput();
@@ -180,23 +186,29 @@ class PremioController extends Controller
                         'anio' => "El año del premio ($anio) debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente($anioSiguienteEstreno)."
                     ])->withInput();
                 }
-            } elseif ($entidadType === 'App\Models\Director' && $peliculaId) {
-                $pelicula = Pelicula::findOrFail($peliculaId);
+            } elseif ($entidadType === 'App\Models\Director') {
                 $director = Director::findOrFail($entidadId);
-                $anioEstreno = Carbon::parse($pelicula->estreno)->year;
-                $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
                 $anioNacDirector = Carbon::parse($director->fecha_nac)->year;
                 $anioInicioActividad = Carbon::parse($director->inicio_actividad)->year;
 
-                if ($anio < $anioEstreno) {
-                    return redirect()->back()->withErrors([
-                        'anio' => "El año del premio ($anio) debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
-                    ])->withInput();
-                } elseif ($anio > $anioSiguienteEstreno) {
-                    return redirect()->back()->withErrors([
-                        'anio' => "El año del premio ($anio) debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente($anioSiguienteEstreno)."
-                    ])->withInput();
-                } elseif ($anio < $anioNacDirector) {
+                if ($peliculaId) {
+                    // Validar los años en relación con la película asociada
+                    $pelicula = Pelicula::findOrFail($peliculaId);
+                    $anioEstreno = Carbon::parse($pelicula->estreno)->year;
+                    $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
+
+                    if ($anio < $anioEstreno) {
+                        return redirect()->back()->withErrors([
+                            'anio' => "El año del premio ($anio) debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
+                        ])->withInput();
+                    } elseif ($anio > $anioSiguienteEstreno) {
+                        return redirect()->back()->withErrors([
+                            'anio' => "El año del premio ($anio) debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
+                        ])->withInput();
+                    }
+                }
+
+                if ($anio < $anioNacDirector) {
                     return redirect()->back()->withErrors([
                         'anio' => "El año del premio ($anio) no puede ser anterior al año de nacimiento del director ($anioNacDirector)."
                     ])->withInput();
@@ -205,6 +217,7 @@ class PremioController extends Controller
                         'anio' => "El año del premio ($anio) no puede ser anterior al año de inicio de actividad del director ($anioInicioActividad)."
                     ])->withInput();
                 }
+
             }
 
             $premioExistente = Premio::where('nombre', $nombre)

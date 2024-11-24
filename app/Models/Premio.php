@@ -23,7 +23,8 @@ class Premio extends Model
 
     public function scopeSearch($query, $search)
     {
-        return $query->whereRaw('LOWER(nombre) LIKE ?', ["%" . strtolower($search) . "%"]);
+        return $query->whereRaw('LOWER(nombre) LIKE ?', ["%" . strtolower($search) . "%"])
+            ->orWhereRaw('LOWER(categoria) LIKE ?', ["%" . strtolower($search) . "%"]);
     }
 
     public function entidad()

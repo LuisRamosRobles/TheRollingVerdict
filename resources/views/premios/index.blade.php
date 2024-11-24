@@ -25,7 +25,7 @@
                                         <img alt="Imagen por defecto" class="img-fluid"
                                              src="{{Premio::$IMAGEN_DEFAULT}}">
                                     @endif
-                                    <h5 class="card-title card-title-link">{{ $premio->nombre }}</h5>
+                                    <h5 class="card-title card-title-link mt-4">{{ $premio->nombre }}</h5>
                                     <p class="card-text">
                                         <strong>Categoría:</strong> {{ $premio->categoria }}<br>
                                         <strong>Año:</strong> {{ $premio->anio }}<br>
