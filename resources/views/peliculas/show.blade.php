@@ -85,7 +85,6 @@
                 @endif
             </div>
 
-
             <h3>Premios</h3>
             @if ($pelicula->premios->isNotEmpty())
                 <ul>
@@ -99,6 +98,8 @@
                 <p>No hay premios asociados con esta película.</p>
             @endif
         </div>
+
+
         <div class="imagen">
             @if($pelicula->imagen != Pelicula::$IMAGEN_DEFAULT)
                 <img alt="Imagen de {{ $pelicula->titulo }}" class="img-fluid"
@@ -107,6 +108,25 @@
             @else
                 <img alt="Imagen por defecto" class="img-fluid" src="{{ Pelicula::$IMAGEN_DEFAULT }}">
             @endif
+
+            <div class="calificacion-media" style="text-align: center; margin-top: 10px;">
+                <!-- Mostrar el promedio en grande -->
+                <p style="font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                    <!-- Nota -->
+                    <span>{{ number_format($pelicula->promedio_calificacion, 1) }} / 5</span>
+
+                    <!-- Estrellas -->
+                    <span style="margin-left: 10px; display: inline-block; transform: translateY(-3px);">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= floor($pelicula->promedio_calificacion))
+                                <span style="color: gold; font-size: 20px;">&#9733;</span> <!-- Estrella llena -->
+                            @else
+                                <span style="color: lightgray; font-size: 20px;">&#9734;</span> <!-- Estrella vacía -->
+                            @endif
+                        @endfor
+                    </span>
+                </p>
+            </div>
         </div>
     </div>
 
