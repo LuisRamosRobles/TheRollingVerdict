@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
+
 
 class Pelicula extends Model
 {
@@ -26,6 +28,15 @@ class Pelicula extends Model
         return $query->whereRaw('LOWER(titulo) LIKE ?', ["%" . strtolower($search) . "%"]);
     }
 
+    public function getPromedioCalificacionAttribute()
+    {
+        $cacheKey = "pelicula_{$this->id}_promedio_calificacion";
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function (){
+            return $this->resenas()->avg('calificacion') ?: 0;
+        });
+    }
+
     // Relación tabla Reseñas
     public function resenas()
     {
@@ -36,6 +47,12 @@ class Pelicula extends Model
     {
         return $this->belongsToMany(Genero::class,
             'genero_pelicula', 'pelicula_id', 'genero_id');
+    }
+
+    public function actores()
+    {
+        return $this->belongsToMany(Actor::class,
+            'actor_pelicula', 'pelicula_id', 'actor_id');
     }
 
     public function director ()

@@ -33,6 +33,10 @@
             <input type="radio" id="director" name="entidad_type" value="App\Models\Director"
                 {{ old('entidad_type') === 'App\Models\Director' ? 'checked' : '' }}>
             <label for="director">Director</label>
+
+            <input type="radio" id="actor" name="entidad_type" value="App\Models\Actor"
+                {{ old('entidad_type') === 'App\Models\Actor' ? 'checked' : ''}}>
+            <label for="actor">Actor</label>
         </div>
 
         <div class="form-group">
@@ -55,7 +59,13 @@
 
         <div class="form-group">
             <label id="entidad-label" for="entidad_id">
-                {{ old('entidad_type', 'App\Models\Pelicula') === 'App\Models\Pelicula' ? 'Película:' : 'Director:' }}
+                @if(old('entidad_type') === 'App\Models\Director')
+                    Director:
+                @elseif(old('entidad_type') === 'App\Models\Actor')
+                    Actor:
+                @else
+                    Pelicula:
+                @endif
             </label>
             <select class="form-control" id="entidad_id" name="entidad_id" required>
 
@@ -64,7 +74,13 @@
 
 
         <div class="form-group" id="pelicula-select"
-             style="display: {{ old('entidad_type') === 'App\Models\Director' ? 'block' : 'none' }};">
+             @if(old('entidad_type') === 'App\Models\Director')
+                 style="display: block;"
+             @elseif(old('entidad_type') === 'App\Models\Actor')
+                 style="display: block;"
+             @else
+                 style="display: none;"
+             @endif>
             <label for="pelicula_id">Película:</label>
             <select class="form-control" id="pelicula_id" name="pelicula_id">
                 <option value="">Seleccione una película</option>
@@ -88,12 +104,14 @@
         document.addEventListener("DOMContentLoaded", function () {
             const peliculaRadio = document.getElementById("pelicula");
             const directorRadio = document.getElementById("director");
+            const actorRadio = document.getElementById("actor");
             const peliculaSelect = document.getElementById("pelicula-select");
             const entidadSelect = document.getElementById("entidad_id");
             const entidadLabel = document.getElementById("entidad-label");
 
             const peliculas = @json($peliculas);
             const directores = @json($directores);
+            const actores = @json($actores);
 
             const oldEntidadType = "{{ old('entidad_type', 'App\Models\Pelicula') }}";
             const oldEntidadId = "{{ old('entidad_id') }}";
@@ -103,18 +121,25 @@
                 entidadSelect.innerHTML = "";
 
                 // Cambiar el label según el tipo seleccionado
-                entidadLabel.textContent = peliculaRadio.checked ? "Película:" : "Director:";
+                if (peliculaRadio.checked) {
+                    entidadLabel.textContent = "Película:";
+                    cargarOpciones(peliculas, "titulo");
+                } else if (directorRadio.checked) {
+                    entidadLabel.textContent = "Director:";
+                    cargarOpciones(directores, "nombre");
+                } else if (actorRadio.checked) {
+                    entidadLabel.textContent = "Actor:";
+                    cargarOpciones(actores, "nombre");
+                }
+            }
 
-                // Obtener las opciones correctas según el tipo seleccionado
-                const opciones = peliculaRadio.checked ? peliculas : directores;
-
-                // Crear las opciones dinámicamente
+            function cargarOpciones(opciones, textoPropiedad) {
                 opciones.forEach(opcion => {
                     const optionElement = document.createElement("option");
                     optionElement.value = opcion.id;
-                    optionElement.textContent = peliculaRadio.checked ? opcion.titulo : opcion.nombre;
+                    optionElement.textContent = opcion[textoPropiedad];
 
-                    // Seleccionar la opción si coincide con el valor anterior
+                    // Mantener la selección anterior si corresponde
                     if (String(opcion.id) === oldEntidadId) {
                         optionElement.selected = true;
                     }
@@ -127,10 +152,16 @@
             if (oldEntidadType === "App\Models\Director") {
                 directorRadio.checked = true;
                 peliculaSelect.style.display = "block";
-            } else {
+            } else if (oldEntidadType === "App\Models\Actor") {
+                actorRadio.checked = true;
+                peliculaSelect.style.display = "block";
+            }else {
                 peliculaRadio.checked = true;
                 peliculaSelect.style.display = "none";
             }
+
+            // Inicializar las opciones al cargar la página
+            actualizarOpciones();
 
             // Eventos para actualizar el select cuando cambie el radio button
             peliculaRadio.addEventListener("change", function () {
@@ -141,9 +172,10 @@
                 peliculaSelect.style.display = "block";
                 actualizarOpciones();
             });
-
-            // Inicializar las opciones al cargar la página
-            actualizarOpciones();
+            actorRadio.addEventListener("change", function () {
+                peliculaSelect.style.display = "block";
+                actualizarOpciones();
+            });
         });
     </script>
 @endsection

@@ -51,23 +51,32 @@
             </div>
 
             <div class="form-group">
-                <label for="inicio_actividad">Inicio de Actividad (Formato: AAAA-MM-DD):</label>
-                <input class="form-control" id="inicio_actividad" name="inicio_actividad" type="text" placeholder="AAAA-MM-DD"
-                       value="{{$director->inicio_actividad ? Carbon::parse($director->inicio_actividad)->format('Y-m-d') : ''}}">
+                <label for="inicio_actividad">Año inicio de Actividad (Formato: AAAA):</label>
+                <input class="form-control" id="inicio_actividad" name="inicio_actividad" type="number" placeholder="AAAA"
+                       value="{{ $director->inicio_actividad }}">
             </div>
 
             <div class="form-group">
                 <label>¿Está activo?</label><br>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="activo" id="activo_si" value="1" {{ $director->activo ? 'checked' : '' }}>
+                    <input class="form-check-input" type="radio" name="activo" id="activo_si" value="1"
+                        {{ $director->activo ? 'checked' : '' }}>
                     <label class="form-check-label" for="activo_si">Sí</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="activo" id="activo_no" value="0" {{ !$director->activo ? 'checked' : '' }}>
+                    <input class="form-check-input" type="radio" name="activo" id="activo_no" value="0"
+                        {{ !$director->activo ? 'checked' : '' }}>
                     <label class="form-check-label" for="activo_no">No</label>
                 </div>
 
+            </div>
+
+            <div class="form-group" id="input-fin_actividad"
+                 style="display: none">
+                <label for="fin_actividad">Año de fin de actividad (Formato: AAAA):</label>
+                <input class="form-control" id="fin_actividad" name="fin_actividad" type="number" placeholder="AAAA"
+                       value="{{ $director->fin_actividad }}">
             </div>
 
             <div class="form-group">
@@ -192,6 +201,31 @@
                     window.location.href = directorShowUrl
                 }
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const activoSiRadio = document.getElementById('activo_si');
+            const activoNoRadio = document.getElementById('activo_no');
+            const finActividadDiv = document.getElementById('input-fin_actividad');
+            const finActividadInput = document.getElementById('fin_actividad');
+
+
+            // Función para actualizar la visibilidad del campo
+            function actualizarVisibilidadFinActividad() {
+                if (activoNoRadio.checked) {
+                    finActividadDiv.style.display = 'block';
+                } else {
+                    finActividadDiv.style.display = 'none';
+                    finActividadInput.value = '';
+                }
+            }
+
+            // Establecer el estado inicial
+            actualizarVisibilidadFinActividad();
+
+            // Actualizar la visibilidad al cambiar el estado de los radio buttons
+            activoSiRadio.addEventListener('change', actualizarVisibilidadFinActividad);
+            activoNoRadio.addEventListener('change', actualizarVisibilidadFinActividad);
         });
 
     </script>

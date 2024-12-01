@@ -31,6 +31,10 @@
             <input type="radio" id="director" name="entidad_type" value="App\Models\Director"
                 {{ $premio->entidad_type == 'App\Models\Director' ? 'checked' : '' }}>
             <label for="director">Director</label>
+
+            <input type="radio" id="actor" name="entidad_type" value="App\Models\Actor"
+                {{ $premio->entidad_type == 'App\Models\Actor' ? 'checked' : '' }}>
+            <label for="actor">Actor</label>
         </div>
 
         <div class="form-group">
@@ -67,7 +71,15 @@
         </div>
 
         <div class="form-group">
-            <label for="entidad_id">Entidad:</label>
+            <label id="entidad-label" for="entidad_id">
+                @if('entidad_type' === 'App\Models\Director')
+                    Director:
+                @elseif('entidad_type' === 'App\Models\Actor')
+                    Actor:
+                @else
+                    Pelicula:
+                @endif
+            </label>
             <select class="form-control" id="entidad_id" name="entidad_id" required>
                 @if($premio->entidad_type == 'App\Models\Pelicula')
                     @foreach($peliculas as $pelicula)
@@ -83,6 +95,13 @@
                             {{ $director->nombre }}
                         </option>
                     @endforeach
+                @elseif($premio->entidad_type == 'App\Models\Actor')
+                    @foreach($actores as $actor)
+                        <option value="{{ $actor->id }}"
+                            {{ $premio->entidad_id == $actor->id ? 'selected' : '' }}>
+                            {{ $actor->nombre }}
+                        </option>
+                    @endforeach
                 @endif
             </select>
         </div>
@@ -95,15 +114,21 @@
         document.addEventListener("DOMContentLoaded", function () {
             const peliculaRadio = document.getElementById("pelicula");
             const directorRadio = document.getElementById("director");
+            const actorRadio = document.getElementById("actor");
             const peliculaSelect = document.getElementById("pelicula-select");
             const entidadSelect = document.getElementById("entidad_id");
+            const entidadLabel = document.getElementById("entidad-label");
+            const premioEntidadId = "{{ $premio->entidad_id }}";
 
             const peliculas = @json($peliculas);
             const directores = @json($directores);
+            const actores = @json($actores);
 
             function inicializarFormulario() {
                 if (directorRadio.checked) {
-                    peliculaSelect.style.display = "{{ $premio->pelicula_id ? 'block' : 'none' }}";
+                    peliculaSelect.style.display = "block";
+                } else if (actorRadio.checked) {
+                    peliculaSelect.style.display = "block";
                 } else {
                     peliculaSelect.style.display = "none";
                 }
@@ -112,18 +137,35 @@
             function actualizarOpciones() {
                 entidadSelect.innerHTML = "";
 
-                const opciones = peliculaRadio.checked ? peliculas : directores;
+                if (peliculaRadio.checked) {
+                    entidadLabel.textContent = "Película:";
+                    cargarOpciones(peliculas, "titulo");
+                } else if (directorRadio.checked) {
+                    entidadLabel.textContent = "Director:";
+                    cargarOpciones(directores, "nombre");
+                } else if (actorRadio.checked) {
+                    entidadLabel.textContent = "Actor:";
+                    cargarOpciones(actores, "nombre");
+                }
+            }
 
+            function cargarOpciones(opciones, textoPropiedad) {
                 opciones.forEach(opcion => {
                     const optionElement = document.createElement("option");
                     optionElement.value = opcion.id;
-                    optionElement.textContent = opcion.titulo || opcion.nombre;
-                    if (opcion.id == {{ $premio->entidad_id }}) {
+                    optionElement.textContent = opcion[textoPropiedad];
+
+                    // Mantener la selección anterior si corresponde
+                    if (String(opcion.id) === premioEntidadId) {
                         optionElement.selected = true;
                     }
+
                     entidadSelect.appendChild(optionElement);
                 });
             }
+
+            inicializarFormulario();
+            actualizarOpciones();
 
             peliculaRadio.addEventListener("change", function () {
                 peliculaSelect.style.display = "none";
@@ -135,8 +177,10 @@
                 actualizarOpciones();
             });
 
-            inicializarFormulario();
-            actualizarOpciones();
+            actorRadio.addEventListener("change", function () {
+                peliculaSelect.style.display = "block";
+                actualizarOpciones();
+            });
         });
     </script>
 @endsection

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Genero;
+use App\Models\Pelicula;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -18,6 +19,7 @@ class DatabaseSeeder extends Seeder
             GeneroSeeder::class,
             DirectorSeeder::class,
             PeliculaSeeder::class,
+            ActorSeeder::class,
             PremioSeeder::class,
         ]);
 

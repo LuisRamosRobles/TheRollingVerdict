@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('titulo');
             $table->date('estreno');
             $table->text('sinopsis');
-            $table->string('reparto');
             $table->string('imagen')->default(Pelicula::$IMAGEN_DEFAULT);
             $table->foreignId('director_id')->constrained('directores')->onDelete('cascade');
             $table->softDeletes();  // Campo deleted_at para softDeletes

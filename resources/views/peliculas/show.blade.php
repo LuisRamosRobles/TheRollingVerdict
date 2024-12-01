@@ -1,4 +1,6 @@
 @php use App\Models\Pelicula;
+     use App\Models\Director;
+     use App\Models\Actor;
      use Carbon\Carbon; @endphp
 
 @extends('main')
@@ -22,16 +24,67 @@
     <div class="pelicula-detalle">
         <div class="info">
             <h1>{{ $pelicula->titulo }}</h1>
-            <p><strong>Director:</strong> {{ $pelicula->director->nombre }}</p>
             <p><strong>Fecha de Estreno:</strong> {{ Carbon::parse($pelicula->estreno)->format('d-m-Y') }}</p>
             <p><strong>Sinopsis:</strong> {{ $pelicula->sinopsis }}</p>
-            <p><strong>Reparto:</strong> {{ $pelicula->reparto }}</p>
-            <h3>Géneros:</h3>
+            <h3>Géneros</h3>
             <ul>
                 @foreach ($pelicula->generos as $genero)
                     <li>{{ $genero->nombre }}</li>
                 @endforeach
             </ul>
+
+            <h3>Director</h3>
+            <div class="col-md-3">
+                @if($pelicula->director)
+                    <a href="{{ route('directores.show', $pelicula->director->id) }}" class="text-decoration-none">
+                        <div class="card h-100 mb-5">
+                            <div class="card-body">
+                                @if($pelicula->director->imagen != Director::$IMAGEN_DEFAULT)
+                                    <img alt="Imagen del Director" class="img-fluid"
+                                         src="{{ asset('storage/' . $pelicula->director->imagen) }}"
+                                         width="230px" height="340px">
+                                @else
+                                    <img alt="Imagen por defecto" class="img-fluid"
+                                         src="{{ Director::$IMAGEN_DEFAULT }}">
+                                @endif
+
+                                <h6 class="card-title card-title-link">{{ $pelicula->director->nombre }}</h6>
+                            </div>
+                        </div>
+                    </a>
+                @else
+                    <p>No hay un director asociado a esta película.</p>
+                @endif
+            </div>
+
+            <h3>Reparto</h3>
+            <div class="row">
+                @if($pelicula->actores->isNotEmpty())
+                    @foreach ($pelicula->actores as $actor)
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('actores.show', $actor->id) }}" class="text-decoration-none">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        @if($actor->imagen != Actor::$IMAGEN_DEFAULT)
+                                            <img alt="Imagen del Actor" class="img-fluid"
+                                                 src="{{ asset('storage/' . $actor->imagen) }}"
+                                                 width="230px" height="340px">
+                                        @else
+                                            <img alt="Imagen por defecto" class="img-fluid"
+                                                 src="{{ Actor::$IMAGEN_DEFAULT }}">
+                                        @endif
+
+                                        <h6 class="card-title card-title-link text-center mt-1">{{ $actor->nombre }}</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                @else
+                    <p>No hay actores asociados con esta película.</p>
+                @endif
+            </div>
+
 
             <h3>Premios</h3>
             @if ($pelicula->premios->isNotEmpty())

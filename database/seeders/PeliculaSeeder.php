@@ -23,7 +23,6 @@ class PeliculaSeeder extends Seeder
             'estreno' => '1963-07-04',
             'director_id' => $directorPelicula1_id,
             'sinopsis' => 'Un grupo de prisioneros intenta escapar de un campo de prisioneros durante la Segunda Guerra Mundial.',
-            'reparto' => 'Steve McQueen, James Garner, Richard Attenborough',
             'imagen' => 'peliculas/1.jpg'
         ]);
 
@@ -32,7 +31,6 @@ class PeliculaSeeder extends Seeder
             'estreno' => '2010-07-16',
             'director_id' => $directorPelicula2_id,
             'sinopsis' => 'Un ladrón que roba secretos a través de la tecnología de sueños se enfrenta a un último trabajo.',
-            'reparto' => 'Leonardo DiCaprio, Joseph Gordon-Levitt, Ellen Page',
             'imagen' => 'peliculas/2.jpg'
         ]);
 
@@ -41,7 +39,6 @@ class PeliculaSeeder extends Seeder
             'estreno' => '2018-03-29',
             'director_id' => $directorPelicula3_id,
             'sinopsis' => 'En un futuro distópico, un joven se embarca en una búsqueda dentro de un mundo de realidad virtual para encontrar un valioso "Easter egg" escondido por su creador.',
-            'reparto' => 'Tye Sheridan, Olivia Cooke, Ben Mendelsohn, Lena Waithe',
             'imagen' => 'peliculas/3.jpg'
         ]);
 

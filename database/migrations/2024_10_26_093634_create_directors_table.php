@@ -18,8 +18,9 @@ return new class extends Migration
             $table->date('fecha_nac')->nullable();
             $table->string('lugar_nac')->nullable();
             $table->text('biografia')->nullable();
-            $table->date('inicio_actividad')->nullable();
-            $table->boolean('activo')->default('true');
+            $table->year('inicio_actividad')->nullable();
+            $table->year('fin_actividad')->nullable();
+            $table->boolean('activo')->default(true);
             $table->string('imagen')->default(Director::$IMAGEN_DEFAULT);
             $table->softDeletes();
             $table->timestamps();

@@ -55,9 +55,31 @@
         </div>
 
         <div class="form-group">
-            <label for="reparto">Reparto:</label>
-            <input class="form-control" id="reparto" name="reparto" type="text" required
-                   value="{{$pelicula->reparto}}">
+            <label for="reparto"><h4>Reparto:</h4></label>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="actores-disponibles">Actores Disponibles:</label>
+                    <select id="actores-disponibles" class="form-control" size="10" multiple>
+                        @foreach($actoresDisponibles as $actor)
+                            <option value="{{ $actor->id }}">{{ $actor->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="reparto-seleccionado">Reparto Seleccionado:</label>
+                    <select id="reparto-seleccionado" class="form-control" size="10" name="reparto[]" multiple>
+                        @foreach($repartoSeleccionado as $actor)
+                            <option value="{{ $actor->id }}" onload="agregarAlReparto({{ $actor->id }})">
+                                {{ $actor->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="mt-2">
+                <button type="button" class="btn btn-primary" id="agregar-actor">Agregar &gt;&gt;</button>
+                <button type="button" class="btn btn-secondary" id="remover-actor">&lt;&lt; Remover</button>
+            </div>
         </div>
 
         <div class="form-group">
@@ -179,6 +201,59 @@
                     window.location.href = peliculaShowUrl
                 }
             }
+        });
+
+        let repartoArray = []; // Array global para almacenar los valores
+
+        // Función para agregar un valor al array
+        function agregarAlReparto(id) {
+            if (!repartoArray.includes(id)) {
+                repartoArray.push(id);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const actoresDisponibles = document.getElementById('actores-disponibles');
+            const repartoSeleccionado = document.getElementById('reparto-seleccionado');
+            const agregarActorBtn = document.getElementById('agregar-actor');
+            const removerActorBtn = document.getElementById('remover-actor');
+
+
+
+            // Recorrer todas las opciones en el select "Reparto Seleccionado"
+            Array.from(repartoSeleccionado.options).forEach(option => {
+                agregarAlReparto(option.value);
+            });
+
+            console.log('Array inicializado:', repartoArray);
+
+            // Mover actores de "disponibles" a "reparto seleccionado"
+            agregarActorBtn.addEventListener('click', function () {
+                Array.from(actoresDisponibles.selectedOptions).forEach(option => {
+                    repartoArray.push(option.value); // Agregar al array
+                    repartoSeleccionado.appendChild(option);
+                });
+            });
+
+            // Mover actores de "reparto seleccionado" a "disponibles"
+            removerActorBtn.addEventListener('click', function () {
+                Array.from(repartoSeleccionado.selectedOptions).forEach(option => {
+                    repartoArray = repartoArray.filter(id => id !== option.value); // Eliminar del array
+                    actoresDisponibles.appendChild(option);
+                });
+            });
+        });
+
+        document.getElementById('form-actualizar-pelicula').addEventListener('submit', function () {
+            const repartoSeleccionado = document.getElementById('reparto-seleccionado');
+            repartoSeleccionado.innerHTML = ''; // Limpiar
+
+            repartoArray.forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.selected = true;
+                repartoSeleccionado.appendChild(option);
+            });
         });
 
     </script>

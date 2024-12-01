@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Actor;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,8 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('actors', function (Blueprint $table) {
+        Schema::create('actores', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre');
+            $table->date('fecha_nac')->nullable();
+            $table->string('lugar_nac')->nullable();
+            $table->text('biografia')->nullable();
+            $table->year('inicio_actividad')->nullable();
+            $table->year('fin_actividad')->nullable();
+            $table->boolean('activo')->default(true);
+            $table->string('imagen')->default(Actor::$IMAGEN_DEFAULT);
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -22,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('actors');
+        Schema::dropIfExists('actores');
     }
 };

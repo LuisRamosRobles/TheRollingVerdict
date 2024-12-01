@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Actor;
 use App\Models\Director;
 use App\Models\Genero;
 use App\Models\Pelicula;
@@ -13,28 +14,33 @@ use Illuminate\Support\Facades\Storage;
 
 class PeliculaController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $peliculas = Pelicula::search($request->search)->orderBy('estreno', 'desc')->paginate(3);
 
         return view('peliculas.index', compact('peliculas'));
     }
 
-    public function show($id) {
-        $pelicula = Pelicula::with(['generos', 'director', 'premios'])->findOrFail($id);
+    public function show($id)
+    {
+        $pelicula = Pelicula::with(['generos', 'director', 'premios', 'actores'])->findOrFail($id);
 
         return view('peliculas.show', compact('pelicula'));
     }
 
-    public function create() {
+    public function create()
+    {
         $pelicula = new Pelicula();
         $generos = Genero::orderBy('nombre', 'asc')->get();
-        $directores = Director::all();
+        $directores = Director::where('activo', true)->orderBy('nombre', 'asc')->get();
+        $actores = Actor::where('activo', true)->orderBy('nombre', 'asc')->get();
 
-        return view('peliculas.create', compact('pelicula', 'generos', 'directores'));
+        return view('peliculas.create', compact('pelicula', 'generos', 'directores', 'actores'));
 
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $request->validate([
             'titulo' => 'required|min:1|max:120',
             'generos' => 'required|array',
@@ -42,7 +48,8 @@ class PeliculaController extends Controller
             'estreno' => 'required|date|date_format:Y-m-d|before_or_equal:today',
             'director_id' => 'required|exists:directores,id',
             'sinopsis' => 'required|min:5|max:255',
-            'reparto' => 'required|min:5|max:255',
+            'reparto' => 'array',
+            'reparto.*' => 'exists:actores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'premios.*.nombre' => 'required|string',
             'premios.*.categoria' => 'required|string',
@@ -96,7 +103,7 @@ class PeliculaController extends Controller
             }
 
 
-            $pelicula = Pelicula::create($request->except(['imagen', 'generos','premios']));
+            $pelicula = Pelicula::create($request->except(['imagen', 'generos', 'reparto','premios']));
 
             if ($request->hasFile('imagen')){
                 $imagen = $request->file('imagen');
@@ -118,6 +125,10 @@ class PeliculaController extends Controller
                 $pelicula->generos()->sync($request->input('generos'));
             }
 
+            if ($request->has('reparto')) {
+                $pelicula->actores()->sync($request->input('reparto'));
+            }
+
             $pelicula->save();
 
             return redirect()->route('peliculas.show', $pelicula->id)->with('success', 'Película creada con éxito.');
@@ -127,15 +138,34 @@ class PeliculaController extends Controller
         }
     }
 
-    public function edit($id) {
-        $pelicula = Pelicula::with('premios')->findOrFail($id);
+    public function edit($id)
+    {
+        $pelicula = Pelicula::with(['generos', 'director', 'actores'])->findOrFail($id);
         $generos = Genero::orderBy('nombre', 'asc')->get();
-        $directores = Director::all();
+        $directores = Director::where('activo', true)->get();
 
-        return view('peliculas.edit', compact('pelicula', 'generos', 'directores'));
+        //dd($pelicula->actores);
+
+        // Actores que están actualmente seleccionados en el reparto
+        $repartoSeleccionado = $pelicula->actores;
+
+        // Actores activos que no están en el reparto
+        $actoresDisponibles = Actor::where('activo', true)
+            ->whereNotIn('id', $repartoSeleccionado->pluck('id'))
+            ->get();
+
+        //dd($repartoSeleccionado, $actoresDisponibles);
+
+        return view('peliculas.edit', compact(
+            'pelicula',
+            'generos',
+            'directores',
+            'repartoSeleccionado',
+            'actoresDisponibles'));
     }
 
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
 
         $request->validate([
             'titulo' => 'required|min:1|max:120',
@@ -144,7 +174,8 @@ class PeliculaController extends Controller
             'estreno' => 'required|date|date_format:Y-m-d|before_or_equal:today',
             'director_id' => 'required|exists:directores,id',
             'sinopsis' => 'required|min:5|max:255',
-            'reparto' => 'required|min:5|max:255|string',
+            'reparto' => 'required|array',
+            'reparto.*' => 'exists:actores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'premios.*.nombre' => 'required|string|max:255',
             'premios.*.categoria' => 'required|string|max:255',
@@ -152,11 +183,11 @@ class PeliculaController extends Controller
         ], $this->mensajes());
 
         try{
-            $pelicula = Pelicula::findOrFail($id);
+            $pelicula = Pelicula::with(['generos', 'director', 'actores'])->findOrFail($id);
 
-            $director = Director::find($request->input('director_id'));
+            $director = Director::findOrFail($request->input('director_id'));
             $inicioActividadYear = $director->inicio_actividad
-                ? Carbon::parse($director->inicio_actividad)->year
+                ? $director->inicio_actividad
                 : null;
 
             $anioEstreno = $request->filled('estreno')
@@ -197,7 +228,14 @@ class PeliculaController extends Controller
                 }
             }
 
-            $pelicula->update($request->except('imagen', 'generos', 'premios'));
+
+
+            $pelicula->update($request->except('imagen', 'generos', 'premios', 'reparto'));
+
+            if ($request->has('reparto')) {
+                //dd($request->input('reparto'));
+                $pelicula->actores()->sync($request->input('reparto'));
+            }
 
             $premiosIds = [];
             foreach ($request->input('premios', []) as $data) {
@@ -243,7 +281,8 @@ class PeliculaController extends Controller
         }
     }
 
-    public function destroy($id) {
+    public function destroy($id)
+    {
         try {
             $pelicula = Pelicula::findOrFail($id);
             if ($pelicula->imagen && $pelicula->imagen != Pelicula::$IMAGEN_DEFAULT) {
@@ -260,13 +299,15 @@ class PeliculaController extends Controller
         }
     }
 
-    public function deleted() {
+    public function deleted()
+    {
         $peliculas = Pelicula::onlyTrashed()->paginate(4);
 
         return view('peliculas.deleted', compact('peliculas'));
     }
 
-    public function restore($id) {
+    public function restore($id)
+    {
         try{
             $pelicula = Pelicula::onlyTrashed()->findOrFail($id);
             $pelicula->restore();
@@ -277,7 +318,8 @@ class PeliculaController extends Controller
         }
     }
 
-    public function mensajes() {
+    public function mensajes()
+    {
         return [
             'titulo.required' => 'El campo título de la película es obligatorio.',
             'titulo.min' => 'El campo título debe tener al menos un caracteres.',
@@ -298,9 +340,8 @@ class PeliculaController extends Controller
             'sinopsis.min' => 'El campo sinopsis debe tener al menos 5 caracteres.',
             'sinopsis.max' => 'El campo sinopsis no puede superar los 120 caracteres.',
 
-            'reparto.required' => 'El campo reparto es obligatorio.',
-            'reparto.min' => 'El campo reparto debe tener al menos 5 caracteres.',
-            'reparto.max' => 'El campo reparto no puede superar los 255 caracteres.',
+            'reparto.required' => 'Debe seleccionar al menos un actor.',
+            'reparto.*.exists' => 'El actor seleccionado no es válido.',
 
             'imagen.required' => 'Debes seleccionar una imagen.',
             'imagen.image' => 'El archivo seleccionado no es una imagen.',
@@ -323,7 +364,8 @@ class PeliculaController extends Controller
 
     }
 
-    public function getImagenPorNombre($nombre) {
+    public function getImagenPorNombre($nombre)
+    {
         $imagenesPremios = [
             'oscar' => 'premios/oscar.jpg',
             'golden globe' => 'premios/golden_globe.jpg',
@@ -342,7 +384,8 @@ class PeliculaController extends Controller
         return $imagen;
     }
 
-    private function validarPremiosDuplicados($premio) {
+    private function validarPremiosDuplicados($premio)
+    {
         return Premio::where('nombre', $premio['nombre'])
             ->where('categoria', $premio['categoria'])
             ->where('anio', $premio['anio'])

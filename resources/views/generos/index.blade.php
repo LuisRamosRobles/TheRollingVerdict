@@ -34,7 +34,7 @@
                 @endforeach
             </div>
         @else
-            <p class="lead"><em>No se ha encontrado ningún dato.</em></p>
+            <p class="lead"><em>No se ha encontrado ningún genero registrado.</em></p>
         @endif
 
         <div class="pagination-container-generos">

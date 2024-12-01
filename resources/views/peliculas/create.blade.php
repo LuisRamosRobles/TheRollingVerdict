@@ -49,9 +49,29 @@
         </div>
 
         <div class="form-group">
-            <label for="reparto">Reparto:</label>
-            <input class="form-control" id="reparto" name="reparto" type="text" required>
+            <label for="reparto"><h4>Reparto:</h4></label>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="actores-disponibles">Actores Disponibles:</label>
+                    <select id="actores-disponibles" class="form-control" size="10" multiple>
+                        @foreach($actores as $actor)
+                            <option value="{{ $actor->id }}">{{ $actor->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="reparto-seleccionado">Reparto Seleccionado:</label>
+                    <select id="reparto-seleccionado" class="form-control" size="10" name="reparto[]" multiple>
+                        <!-- Los actores seleccionados se moverán aquí -->
+                    </select>
+                </div>
+            </div>
+            <div class="mt-2">
+                <button type="button" class="btn btn-primary" id="agregar-actor">Agregar &gt;&gt;</button>
+                <button type="button" class="btn btn-secondary" id="remover-actor">&lt;&lt; Remover</button>
+            </div>
         </div>
+
 
         <div class="form-group">
             <label for="generos">Géneros:</label>
@@ -109,6 +129,28 @@
         function eliminarPremio(button) {
             button.parentElement.remove();
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const actoresDisponibles = document.getElementById('actores-disponibles');
+            const repartoSeleccionado = document.getElementById('reparto-seleccionado');
+            const agregarActorBtn = document.getElementById('agregar-actor');
+            const removerActorBtn = document.getElementById('remover-actor');
+
+            // Mover actores de "disponibles" a "reparto seleccionado"
+            agregarActorBtn.addEventListener('click', function () {
+                Array.from(actoresDisponibles.selectedOptions).forEach(option => {
+                    repartoSeleccionado.appendChild(option);
+                });
+            });
+
+            // Mover actores de "reparto seleccionado" a "disponibles"
+            removerActorBtn.addEventListener('click', function () {
+                Array.from(repartoSeleccionado.selectedOptions).forEach(option => {
+                    actoresDisponibles.appendChild(option);
+                });
+            });
+        });
+
     </script>
 
 

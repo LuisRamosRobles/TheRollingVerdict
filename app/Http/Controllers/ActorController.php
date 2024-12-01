@@ -2,40 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Director;
+use App\Models\Actor;
 use App\Models\Pelicula;
 use App\Models\Premio;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class DirectorController extends Controller
+class ActorController extends Controller
 {
     public function index(Request $request)
     {
-        $directores = Director::search($request->search)->orderBy('nombre', 'asc')->paginate(4);
+        $actores = Actor::search($request->search)->orderBy('nombre', 'asc')->paginate(4);
 
-        return view('directores.index', compact('directores'));
+        return view('actores.index', compact('actores'));
     }
 
     public function show($id)
     {
-        $director = Director::with(['peliculas', 'premios'])->findOrFail($id);
-        $peliculas = $director->peliculas()->paginate(5);
+        $actor = Actor::with(['peliculas', 'premios'])->findOrFail($id);
+        $peliculas = $actor->peliculas()->paginate(5);
 
-        return view('directores.show', compact('director', 'peliculas'));
+        return view('actores.show', compact('actor', 'peliculas'));
     }
 
     public function create()
     {
-        $director = new Director();
+        $actor = new Actor();
 
-        return view('directores.create', compact('director'));
+        return view('actores.create', compact('actor'));
     }
 
     public function store(Request $request)
     {
-
         $request->validate([
             'nombre' => 'required|string|min:3|max:120|regex:/^[a-zA-Z\s]+$/',
             'fecha_nac' => 'nullable|date|date_format:Y-m-d|before:' . now(),
@@ -66,18 +65,10 @@ class DirectorController extends Controller
                 return redirect()->back()->withErrors($erroresFechas)->withInput();
             }
 
-            // Validar coherencia entre fechas
-            if ($inicioActividadYear && $nacimientoYear && $inicioActividadYear < $nacimientoYear) {
-                return redirect()->back()->withErrors([
-                    'inicio_actividad' => 'La fecha de inicio de actividad no puede ser anterior a la fecha de nacimiento.'
-                ])->withInput();
-            }
-
             $data = $request->except(['imagen', 'premios']);
             $data['fecha_nac'] = $request->filled('fecha_nac') ? $request->input('fecha_nac') : null;
             $data['inicio_actividad'] = $request->filled('inicio_actividad') ? $request->input('inicio_actividad') : null;
             $data['fin_actividad'] = $request->filled('fin_actividad')? $request->input('fin_actividad') : null;
-
 
             /*if($request->has('premios')){
                 foreach ($request->input('premios') as $index => $premio) {
@@ -85,14 +76,14 @@ class DirectorController extends Controller
                     if ($nacimientoYear && $premio['anio'] < $nacimientoYear) {
                         return redirect()->back()
                             ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del director ({$nacimientoYear})."
+                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del actor ({$nacimientoYear})."
                             ])->withInput();
                     }
 
                     if ($inicioActividadYear && $premio['anio'] < $inicioActividadYear) {
                         return redirect()->back()
                             ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser  anterior al inicio de actividad del director ({$inicioActividadYear})."
+                                "premios.{$index}.anio" => "El año del premio no puede ser  anterior al inicio de actividad del actor ({$inicioActividadYear})."
                             ])->withInput();
                     }
 
@@ -122,63 +113,63 @@ class DirectorController extends Controller
                 }
             }*/
 
-
-            $director = Director::create($data);
+            $actor = Actor::create($data);
 
             /*if ($request->has('premios')) {
                 foreach ($request->input('premios', []) as $premioData) {
                     $nombre = $premioData['nombre'];
                     $imagen = $this->getImagenPorNombre($nombre);
-                    $director->premios()->create(array_merge(
+                    $actor->premios()->create(array_merge(
                         $premioData, ['imagen' => $imagen]));
                 }
             }*/
 
             if ($request->hasFile('imagen')) {
-
-                $director->imagen = $this->procesarImagen($director, $request->file('imagen'));
+                $imagen = $request->file('imagen');
+                $extension = $imagen->getClientOriginalExtension();
+                $fileToSave = $actor->id . '.' .$extension;
+                $actor->imagen = $imagen->storeAs('actores', $fileToSave, 'public');
             }
 
-            $director->save();
-            return redirect()->route('directores.show', $director->id)->with('success', 'Director creado correctamente.');
+            $actor->save();
+            return redirect()->route('actores.show', $actor->id)->with('success', 'Actor creado correctamente.');
+
+
+
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors([
-                'error' => 'Error al crear el director.' . $e->getMessage()
+            return back()->withInput()->withErrors([
+                'error' => 'Error al crear el actor.'. $e->getMessage(),
             ])->withInput();
         }
     }
 
     public function edit($id)
     {
-        $director = Director::with('premios')->findOrFail($id);
+        $actor = Actor::findOrFail($id);
         $peliculas = Pelicula::orderBy('titulo', 'asc')->get();
 
-        return view('directores.edit', compact('director', 'peliculas'));
+        return view('actores/edit', compact('actor', 'peliculas'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|min:3|max:120',
-            'fecha_nac' => 'nullable|date|date_format:Y-m-d|before:' .now(),
+            'nombre' => 'required|string|min:3|max:120|regex:/^[a-zA-Z\s]+$/',
+            'fecha_nac' => 'nullable|date|date_format:Y-m-d|before:' . now(),
             'lugar_nac' => 'nullable|string|max:120',
             'biografia' => 'nullable|max:255',
             'inicio_actividad' => 'nullable|integer|digits:4|before_or_equal:' . now()->year,
             'fin_actividad' => 'nullable|integer|digits:4|before_or_equal:' . now()->year,
             'activo' => 'boolean',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'premios.*.nombre' => 'required|string|max:255',
-            'premios.*.categoria' => 'required|string|max:255',
-            'premios.*.anio' => 'required|integer|min:1900|max:' . now()->year,
-            'premios.*.pelicula_id' => 'nullable|exists:peliculas,id',
         ], $this->mensajes());
 
         try {
-            $director = Director::findOrFail($id);
+            $actor = Actor::findOrFail($id);
 
             $nacimientoYear = $request->filled('fecha_nac')
                 ? Carbon::parse($request->input('fecha_nac'))->year
-                : ($director->fecha_nac ? Carbon::parse($director->fecha_nac)->year : null);
+                : null;
 
             $inicioActividadYear = $request->filled('inicio_actividad')
                 ? $request->input('inicio_actividad')
@@ -188,7 +179,6 @@ class DirectorController extends Controller
                 ? $request->input('fin_actividad')
                 : null;
 
-            // Validar coherencia entre fechas
             $erroresFechas = $this->validarFechas($nacimientoYear, $inicioActividadYear, $finActividadYear);
             if ($erroresFechas) {
                 return redirect()->back()->withErrors($erroresFechas)->withInput();
@@ -197,13 +187,13 @@ class DirectorController extends Controller
             foreach ($request->input('premios', []) as $index => $premio) {
                 if ($nacimientoYear && $premio['anio'] < $nacimientoYear) {
                     return redirect()->back()->withErrors([
-                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del director ({$nacimientoYear})."
+                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del actor ({$nacimientoYear})."
                     ])->withInput();
                 }
 
                 if ($inicioActividadYear && $premio['anio'] < $inicioActividadYear) {
                     return redirect()->back()->withErrors([
-                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al inicio de actividad del director ({$inicioActividadYear})."
+                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al inicio de actividad del actor ({$inicioActividadYear})."
                     ])->withInput();
                 }
 
@@ -232,23 +222,19 @@ class DirectorController extends Controller
                 }
             }
 
-            $director->update($request->except('imagen', 'premios', 'premios_eliminar'));
+            $actor->update($request->except('imagen', 'premios', 'premios_eliminar'));
 
-            $this->procesarPremios($director, $request->input('premios', []), $request->input('premios_eliminar', ''));
-
-
-
+            $this->procesarPremios($actor, $request->input('premios', []), $request->input('premios_eliminar', ''));
 
             if ($request->hasFile('imagen')) {
-
-                $director->imagen = $this->procesarImagen($director, $request->file('imagen'));
+                $actor->imagen = $this->procesarImagen($actor, $request->file('imagen'));
             }
 
-            $director->save();
-            return redirect()->route('directores.show', $director->id)->with('success', 'Director actualizado correctamente.');
+            $actor->save();
+            return redirect()->route('actores.show', $actor->id)->with('success', 'Actor editado correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors([
-                'error' => 'Error al actualizar el director.' . $e->getMessage(),
+                'error' => 'Error al actualizar el actor.' . $e->getMessage(),
             ])->withInput();
         }
     }
@@ -256,37 +242,37 @@ class DirectorController extends Controller
     public function destroy($id)
     {
         try {
-            $director = Director::findOrFail($id);
-
-            if ($director->imagen!= Director::$IMAGEN_DEFAULT && Storage::exists($director->imagen)) {
-                Storage::delete($director->imagen);
+            $actor = Actor::findOrFail($id);
+            if ($actor->imagen && $actor->imagen!= Actor::$IMAGEN_DEFAULT) {
+                Storage::delete($actor->imagen);
             }
-            $director->imagen = Director::$IMAGEN_DEFAULT;
-            $director->save();
-
-            $director->delete();
-            return redirect()->route('directores.index')->with('success', 'Director eliminado correctamente.');
+            $actor->delete();
+            return redirect()->route('actores.index')->with('success', 'Actor eliminado correctamente.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al eliminar el director.']);
+            return redirect()->back()->withErrors([
+                'error' => 'Error al eliminar el actor.'
+            ]);
         }
     }
 
     public function deleted()
     {
-        $directores = Director::onlyTrashed()->paginate(4);
+        $actores = Actor::onlyTrashed()->paginate(4);
 
-        return view('directores.deleted', compact('directores'));
+        return view('actores.deleted', compact('actores'));
     }
 
     public function restore($id)
     {
         try {
-            $director = Director::onlyTrashed()->findOrFail($id);
-            $director->restore();
+            $actor = Actor::onlyTrashed()->findOrFail($id);
+            $actor->restore();
 
-            return redirect()->route('directores.deleted')->with('success', 'Director restaurado correctamente.');
+            return redirect()->route('actores.deleted')->with('success', 'Actor restaurado con éxito.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al restaurar el director.']);
+            return redirect()->back()->withErrors([
+                'error' => 'Error al restaurar el actor.'
+            ]);
         }
     }
 
@@ -358,7 +344,6 @@ class DirectorController extends Controller
 
     }
 
-
     public function getImagenPorNombre($nombre)
     {
         $imagenesPremios = [
@@ -379,17 +364,19 @@ class DirectorController extends Controller
         return $imagen;
     }
 
-    private function procesarImagen($director, $imagen)
+    private function procesarImagen($actor, $imagen)
     {
-        if ($director->imagen != Director::$IMAGEN_DEFAULT && Storage::exists($director->imagen)) {
-            Storage::delete($director->imagen);
+        if ($actor->imagen != Actor::$IMAGEN_DEFAULT && Storage::exists($actor->imagen)) {
+            Storage::delete($actor->imagen);
         }
 
         $extension = $imagen->getClientOriginalExtension();
-        $fileToSave = $director->id . '.' . $extension;
+        $fileToSave = $actor->id . '.' . $extension;
 
-        return $imagen->storeAs('directores', $fileToSave, 'public');
+        return $imagen->storeAs('actores', $fileToSave, 'public');
     }
+
+
 
     private function validarPremiosDuplicados($premio)
     {
@@ -400,7 +387,7 @@ class DirectorController extends Controller
             ->exists();
     }
 
-    private function procesarPremios($director, array $premios, $premiosEliminar)
+    private function procesarPremios($actor, array $premios, $premiosEliminar)
     {
         $premiosIds = [];
         foreach ($premios as $data) {
@@ -413,14 +400,16 @@ class DirectorController extends Controller
                 $premiosIds[] = $premio->id;
             } else {
                 $data['imagen'] = $this->getImagenPorNombre($data['nombre']);
-                $nuevoPremio = $director->premios()->create($data);
+                $nuevoPremio = $actor->premios()->create($data);
                 $premiosIds[] = $nuevoPremio->id;
             }
         }
 
         if ($premiosEliminar) {
             $idsEliminar = explode(',', $premiosEliminar);
-            $director->premios()->whereIn('id', $idsEliminar)->delete();
+            $actor->premios()->whereIn('id', $idsEliminar)->delete();
         }
     }
+
+
 }

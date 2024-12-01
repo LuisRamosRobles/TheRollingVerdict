@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\DirectorController;
-use App\Http\Controllers\PremioController;
+use App\Http\Controllers\ActorController;
 use App\Http\Controllers\GeneroController;
+use App\Http\Controllers\PremioController;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PeliculaController;
 
@@ -12,6 +14,20 @@ use App\Http\Controllers\PeliculaController;
 
 Route::get('/', function () {
     return redirect()->route('peliculas.index');
+});
+
+
+Route::get('/test-redis', function () {
+    // Intenta almacenar un valor en Redis
+    Cache::put('prueba', 'Hola Redis', 10); // 10 minutos de duración
+
+    // Recupera el valor almacenado
+    $valor = Cache::get('prueba');
+
+    return response()->json([
+        'mensaje' => 'Prueba de Redis',
+        'valor_guardado' => $valor
+    ]);
 });
 
 Route::group(['prefix'=> 'peliculas'], function(){
@@ -72,6 +88,26 @@ Route::group(['prefix' => 'directores'], function (){
     Route::patch('/{id}', [DirectorController::class, 'update'])->name('directores.update');
 
     Route::delete('/{id}', [DirectorController::class, 'destroy'])->name('directores.destroy');
+});
+
+Route::group(['prefix' => 'actores'], function (){
+    Route::get('/', [ActorController::class, 'index'])->name('actores.index');
+
+    Route::get('/create', [ActorController::class, 'create'])->name('actores.create');
+
+    Route::post('/store', [ActorController::class,'store'])->name('actores.store');
+
+    Route::get('/eliminados', [ActorController::class, 'deleted'])->name('actores.deleted');
+
+    Route::post('/{id}/restaurar', [ActorController::class,'restore'])->name('actores.restore');
+
+    Route::get('/{id}', [ActorController::class,'show'])->name('actores.show');
+
+    Route::get('/{id}/edit', [ActorController::class, 'edit'])->name('actores.edit');
+
+    Route::patch('/{id}', [ActorController::class, 'update'])->name('actores.update');
+
+    Route::delete('/{id}', [ActorController::class, 'destroy'])->name('actores.destroy');
 });
 
 Route::group(['prefix' => 'premios'], function (){

@@ -61,7 +61,7 @@ class PremioSeeder extends Seeder
         $director1->premios()->create([
             'nombre' => 'Directors Guild of America',
             'categoria' => 'Logro Sobresaliente en Dirección',
-            'anio' => 1965,
+            'anio' => 1964,
             'imagen' => 'premios/DGAAward.png',
             'pelicula_id' => 1
         ]);

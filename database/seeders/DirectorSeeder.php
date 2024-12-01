@@ -18,8 +18,9 @@ class DirectorSeeder extends Seeder
             'fecha_nac' => '1910-01-03',
             'lugar_nac' => 'Oak Park, Illinois, Estados Unidos',
             'biografia' => 'Director estadounidense famoso por sus películas de acción y westerns, como "The Great Escape" y "The Magnificent Seven".',
-            'inicio_actividad' => '1932-01-01',
-            'activo' => 'false',
+            'inicio_actividad' => '1932',
+            'fin_actividad' => '1976',
+            'activo' => false,
             'imagen' => 'directores/1.jpg'
         ]);
 
@@ -29,8 +30,8 @@ class DirectorSeeder extends Seeder
             'fecha_nac' => '1946-12-18',
             'lugar_nac' => 'Cincinnati, Ohio, USA',
             'biografia' => 'Director de cine y productor estadounidense, conocido por películas icónicas como "Jurassic Park" y "Schindler\'s List".',
-            'inicio_actividad' => '1971-01-01',
-            'activo' => 'true',
+            'inicio_actividad' => '1971',
+            'activo' => true,
             'imagen' => 'directores/2.jpg'
         ]);
 
@@ -39,8 +40,8 @@ class DirectorSeeder extends Seeder
             'fecha_nac' => '1970-07-30',
             'lugar_nac' => 'Londres, Inglaterra',
             'biografia' => 'Director británico conocido por películas de alto concepto como "Inception" y la trilogía de "The Dark Knight".',
-            'inicio_actividad' => '1998-01-01',
-            'activo' => 'true',
+            'inicio_actividad' => '1998',
+            'activo' => true,
             'imagen' => 'directores/3.jpg'
         ]);
 
@@ -49,8 +50,8 @@ class DirectorSeeder extends Seeder
             'fecha_nac' => '1942-11-17',
             'lugar_nac' => 'Queens, Nueva York, USA',
             'biografia' => 'Reconocido director estadounidense famoso por películas como "Goodfellas" y "The Wolf of Wall Street".',
-            'inicio_actividad' => '1963-01-01',
-            'activo' => 'true',
+            'inicio_actividad' => '1963',
+            'activo' => true,
             'imagen' => 'directores/4.jpg'
         ]);
 
@@ -59,8 +60,8 @@ class DirectorSeeder extends Seeder
             'fecha_nac' => '1961-11-28',
             'lugar_nac' => 'Ciudad de México, México',
             'biografia' => 'Director mexicano conocido por películas como "Gravity" y "Roma".',
-            'inicio_actividad' => '1983-01-01',
-            'activo' => 'true',
+            'inicio_actividad' => '1983',
+            'activo' => true,
             'imagen' => 'directores/5.jpg'
         ]);
 
@@ -69,8 +70,8 @@ class DirectorSeeder extends Seeder
             'fecha_nac' => '1963-03-27',
             'lugar_nac' => 'Knoxville, Tennessee, USA',
             'biografia' => 'Director conocido por su estilo único y películas como "Pulp Fiction" y "Django Unchained".',
-            'inicio_actividad' => '1987-01-01',
-            'activo' => 'true',
+            'inicio_actividad' => '1987',
+            'activo' => true,
             'imagen' => 'directores/6.jpg'
         ]);
     }

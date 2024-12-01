@@ -161,7 +161,7 @@ hr {
     background-color: lightgray;
 }
 
-.pelicula-detalle, .director-detalle, .premio-detalle {
+.pelicula-detalle, .director-detalle, .premio-detalle, .actor-detalle {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;

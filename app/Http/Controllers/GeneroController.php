@@ -8,13 +8,15 @@ use Illuminate\Support\Facades\Storage;
 
 class GeneroController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $generos = Genero::search($request->search)->orderBy('nombre', 'asc')->paginate(4);
 
         return view('generos.index', compact('generos'));
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         $genero = Genero::with('peliculas')->findOrFail($id);
 
         $peliculas = $genero->peliculas()->paginate(3);
@@ -22,13 +24,15 @@ class GeneroController extends Controller
         return view('generos.show', compact('genero', 'peliculas'));
     }
 
-    public function create(){
+    public function create()
+    {
         $genero = new Genero();
 
         return view('generos.create', compact('genero'));
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
             'nombre' =>'required|unique:generos|min:5|max:255',
         ], $this->mensajes());
@@ -50,13 +54,15 @@ class GeneroController extends Controller
         }
     }
 
-    public function edit($id) {
+    public function edit($id)
+    {
         $genero = Genero::findOrFail($id);
 
         return view('generos.edit', compact('genero'));
     }
 
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $request->validate([
             'nombre' =>'required|min:5|max:255|unique:generos,nombre,'.$id,
         ], $this->mensajes());
@@ -82,7 +88,8 @@ class GeneroController extends Controller
         }
     }
 
-    public function destroy($id) {
+    public function destroy($id)
+    {
         try{
             $genero = Genero::findOrFail($id);
             if ($genero->imagen != Genero::$IMAGEN_DEFAULT && Storage::exists($genero->imagen)){
@@ -99,13 +106,15 @@ class GeneroController extends Controller
         }
     }
 
-    public function deleted() {
+    public function deleted()
+    {
         $generos = Genero::onlyTrashed()->paginate(4);
 
         return view('generos.deleted', compact('generos'));
     }
 
-    public function restore($id) {
+    public function restore($id)
+    {
         try{
             $genero = Genero::onlyTrashed()->findOrFail($id);
             $genero->restore();
@@ -116,7 +125,8 @@ class GeneroController extends Controller
         }
     }
 
-    public function mensajes() {
+    public function mensajes()
+    {
         return [
             'nombre.required' => 'El campo nombre del genero es obligatorio.',
             'nombre.unique' => 'El nombre del genero ya existe.',

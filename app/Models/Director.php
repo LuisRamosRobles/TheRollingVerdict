@@ -18,37 +18,48 @@ class Director extends Model
         'lugar_nac',
         'biografia',
         'inicio_actividad',
+        'fin_actividad',
         'activo',
         'imagen',
     ];
 
     protected $casts = [
         'fecha_nac' => 'date',
-        'inicio_actividad' => 'date',
+        'inicio_actividad' => 'integer',
+        'fin_actividad' => 'integer',
         'activo' => 'boolean',
     ];
 
-    public function scopeSearch($query, $search) {
+    public function scopeSearch($query, $search)
+    {
 
         return $query->whereRaw('LOWER(nombre) LIKE ?', ["%" . strtolower($search) . "%"]);
     }
 
-    public function getAniosEdadAttribute() {
+    public function getAniosEdadAttribute()
+    {
 
         return (int) Carbon::parse($this->fecha_nac)->diffInYears(Carbon::now());
     }
 
-    public function getAniosActivoAttribute() {
+    public function getAniosActivoAttribute()
+    {
+        if (!$this->inicio_actividad) {
+            return null;
+        }
 
-        return (int) Carbon::parse($this->inicio_actividad)->diffInYears(Carbon::now());
+        $fin = $this->fin_actividad ?? Carbon::now()->year; // Usa el año actual si no hay fecha de retiro
+        return $fin - $this->inicio_actividad;
     }
 
-    public function peliculas() {
+    public function peliculas()
+    {
 
         return $this->hasMany(Pelicula::class, 'director_id');
     }
 
-    public function premios() {
+    public function premios()
+    {
 
         return $this->morphMany(Premio::class, 'entidad');
     }

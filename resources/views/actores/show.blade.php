@@ -1,4 +1,4 @@
-@php use App\Models\Director;
+@php use App\Models\Actor;
      use Carbon\Carbon;
      use App\Models\Pelicula;
 @endphp
@@ -6,7 +6,7 @@
 @extends('main')
 @include('header')
 
-@section('title', $director->nombre)
+@section('title', $actor->nombre)
 
 @section('content')
 
@@ -21,25 +21,25 @@
         <br>
     @endif
 
-    <div class="director-detalle">
+    <div class="actor-detalle">
         <div class="info">
-            <h1>{{ $director->nombre }}</h1>
+            <h1>{{ $actor->nombre }}</h1>
             <p><strong>Edad:</strong>
-                {{ $director->fecha_nac ? Carbon::parse($director->fecha_nac)->format('d-m-Y') . ' (' . $director->anios_edad . ' años)' : 'No disponible' }}
+                {{ $actor->fecha_nac ? Carbon::parse($actor->fecha_nac)->format('d-m-Y') . ' (' . $actor->anios_edad . ' años)' : 'No disponible'}}
             </p>
-            <p><strong>Lugar de nacimiento:</strong> {{ $director->lugar_nac }}</p>
-            <p><strong>Biografía:</strong> {{$director->biografia}}</p>
+            <p><strong>Lugar de nacimiento:</strong> {{ $actor->lugar_nac }}</p>
+            <p><strong>Biografía:</strong> {{$actor->biografia}}</p>
             <p><strong>Años activos:</strong>
-                {{ $director->inicio_actividad
-         ? ($director->inicio_actividad . ' - ' . ($director->fin_actividad ?? 'Presente') . ' (' . $director->anios_activo . ' años)')
-         : 'No disponible' }}
+                {{ $actor->inicio_actividad
+        ? ($actor->inicio_actividad . ' - ' . ($actor->fin_actividad ?? 'Presente') . ' (' . $actor->anios_activo . ' años)')
+        : 'No disponible' }}
             </p>
-            <p><strong>Activo:</strong>{{ $director->activo ? 'Sí' : 'No' }}</p>
+            <p><strong>Activo:</strong>{{ $actor->activo ? 'Sí' : 'No' }}</p>
 
             <h3>Premios:</h3>
-            @if ($director->premios->isNotEmpty())
+            @if ($actor->premios->isNotEmpty())
                 <ul>
-                    @foreach ($director->premios as $premio)
+                    @foreach ($actor->premios as $premio)
                         <li>
                             <strong>{{ $premio->nombre }}</strong> - {{ $premio->categoria }} ({{ $premio->anio }})
                             @if ($premio->pelicula)
@@ -49,23 +49,23 @@
                     @endforeach
                 </ul>
             @else
-                <p>No hay premios registrados para <strong>{{ $director->nombre }}</strong>.</p>
+                <p>No hay premios registrados para <strong>{{ $actor->nombre }}</strong>.</p>
             @endif
         </div>
         <div class="imagen">
-            @if($director->imagen != Director::$IMAGEN_DEFAULT)
-                <img alt="Imagen de {{ $director->nombre }}" class="img-fluid"
-                     src="{{ asset('storage/' . $director->imagen) }}"
+            @if($actor->imagen != Actor::$IMAGEN_DEFAULT)
+                <img alt="Imagen de {{ $actor->nombre }}" class="img-fluid"
+                     src="{{ asset('storage/' . $actor->imagen) }}"
                      width="230px" height="340px">
             @else
                 <img alt="Imagen por defecto" class="img-fluid"
-                     src="{{ Director::$IMAGEN_DEFAULT }}">
+                     src="{{ Actor::$IMAGEN_DEFAULT }}">
             @endif
         </div>
     </div>
 
-    <div class="peliculas-dirigidas mt-5">
-        <h2>Películas Dirigidas</h2>
+    <div class="peliculas-actuadas mt-5">
+        <h2>Películas Actuadas</h2>
         <div class="row">
             @if(count($peliculas) > 0)
                 @foreach($peliculas as $pelicula)
@@ -73,14 +73,15 @@
                         <a href="{{ route('peliculas.show', $pelicula->id) }}" class="text-decoration-none">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    @if($pelicula->imagen != Pelicula::$IMAGEN_DEFAULT)
+                                    @if($pelicula->imagen!= Pelicula::$IMAGEN_DEFAULT)
                                         <img alt="Imagen de {{ $pelicula->titulo }}" class="img-fluid"
-                                             src="{{ asset('storage/' . $pelicula->imagen) }}"
+                                             src="{{ asset('storage/'. $pelicula->imagen) }}"
                                              width="380px" height="220px">
                                     @else
                                         <img alt="Imagen por defecto" class="img-fluid"
-                                             src="{{Pelicula::$IMAGEN_DEFAULT}}">
+                                             src="{{ Pelicula::$IMAGEN_DEFAULT }}">
                                     @endif
+
                                     <h6 class="card-title">{{ $pelicula->titulo }}</h6>
                                 </div>
                             </div>
@@ -88,7 +89,7 @@
                     </div>
                 @endforeach
             @else
-                <p>No se han encontrado películas dirigidas por <strong>{{ $director->nombre }}</strong>.</p>
+                <p>No se han encontrado películas actuadas para <strong>{{ $actor->nombre }}</strong>.</p>
             @endif
         </div>
         <div class="pagination-container">
@@ -96,14 +97,13 @@
         </div>
     </div>
 
-
-    <a class="btn btn-success mb-4" href="{{route('directores.edit', $director->id)}}">Actualizar Director</a>
-    <a class="btn btn-secondary mb-4 mx-2" href="{{ route('directores.index') }}">Volver</a>
-    <form action="{{ route('directores.destroy', $director->id) }}" method="POST" style="display: inline;">
+    <a class="btn btn-success mb-4" href="{{route('actores.edit', $actor->id)}}">Actualizar Actor</a>
+    <a class="btn btn-secondary mb-4 mx-2" href="{{ route('actores.index') }}">Volver</a>
+    <form action="{{ route('actores.destroy', $actor->id) }}" method="POST" style="display: inline;">
         @csrf
         @method('DELETE')
         <button type="submit" class="btn btn-danger mb-4"
-                onclick="return confirm('¿Estás seguro de que deseas borrar este director?')">Borrar
+                onclick="return confirm('¿Estás seguro de que deseas borrar este actor?')">Borrar
         </button>
     </form>
 

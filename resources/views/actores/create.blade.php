@@ -1,10 +1,10 @@
 @extends('main')
 @include('header')
 
-@section('title', 'Añadir Director')
+@section('title', 'Añadir Actor')
 
 @section('content')
-    <h1>Añadir Director</h1>
+    <h1>Añadir Actor</h1>
 
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible">
@@ -18,7 +18,7 @@
         <br/>
     @endif
 
-    <form action="{{ route('directores.store') }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('actores.store') }}" method="post" enctype="multipart/form-data">
         @csrf
         @method('POST')
 
@@ -43,7 +43,7 @@
         </div>
 
         <div class="form-group">
-            <label for="inicio_actividad">Inicio de Actividad (Formato: AAAA):</label>
+            <label for="inicio_actividad">Año de inicio de actividad (Formato: AAAA):</label>
             <input class="form-control" id="inicio_actividad" name="inicio_actividad" type="number" placeholder="AAAA">
         </div>
 
@@ -72,7 +72,7 @@
         </div>
 
         <button class="btn btn-primary" type="submit">Crear</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('directores.index') }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('actores.index') }}">Volver</a>
     </form>
 
     <script>
@@ -99,8 +99,6 @@
 
         });
     </script>
-
-
 
 @endsection
 @include('footer')

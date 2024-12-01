@@ -16,7 +16,8 @@ class Genero extends Model
         'imagen'
     ];
 
-    public function scopeSearch($query, $search) {
+    public function scopeSearch($query, $search)
+    {
         return $query->whereRaw('LOWER(nombre) LIKE ?', ["%" . strtolower($search) . "%"]);
     }
 

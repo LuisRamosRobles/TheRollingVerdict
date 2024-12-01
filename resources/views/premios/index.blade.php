@@ -33,6 +33,11 @@
                                             <strong>Película:</strong> {{ $premio->entidad->titulo }}
                                         @elseif($premio->entidad_type === 'App\Models\Director')
                                             <strong>Director:</strong> {{ $premio->entidad->nombre }}
+                                        @elseif($premio->entidad_type === 'App\Models\Actor')
+                                            <strong>Actor:</strong> {{ $premio->entidad->nombre }}
+                                        @endif
+                                        @if($premio->pelicula)
+                                            <p><strong>Película Asociada:</strong> {{ $premio->pelicula->titulo }}</p>
                                         @endif
                                     </p>
                                 </div>
@@ -42,7 +47,7 @@
                 @endforeach
             </div>
         @else
-            <p>No se encontraron premios registrados.</p>
+            <p class="lead"><em>No se ha encontrado ningún premio registrado.</em></p>
         @endif
 
         <div class="pagination-container mt-4">

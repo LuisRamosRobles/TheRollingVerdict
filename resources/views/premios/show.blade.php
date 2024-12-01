@@ -25,10 +25,12 @@
                 <p><strong>Película:</strong> {{ $premio->entidad->titulo }}</p>
             @elseif($premio->entidad_type == 'App\Models\Director')
                 <p><strong>Director:</strong> {{ $premio->entidad->nombre }}</p>
+            @elseif($premio->entidad_type == 'App\Models\Actor')
+                <p><strong>Actor:</strong> {{ $premio->entidad->nombre }}</p>
             @endif
             <p><strong>Categoria:</strong> {{ $premio->categoria }}</p>
             <p><strong>Año:</strong> {{ $premio->anio }}</p>
-            @if($premio->entidad_type == 'App\Models\Director' && $premio->pelicula)
+            @if(($premio->entidad_type == 'App\Models\Director' && $premio->pelicula) || ($premio->entidad_type == 'App\Models\Actor' && $premio->pelicula))
                 <p><strong>Película Asociada:</strong> {{ $premio->pelicula->titulo }}</p>
             @endif
         </div>

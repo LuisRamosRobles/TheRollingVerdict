@@ -6,7 +6,6 @@
 @section('title', 'Directorio de Directores')
 
 @section('content')
-
     <div class="directores">
         <h1>Directorio de Directores</h1>
 
@@ -34,7 +33,7 @@
                 @endforeach
             </div>
         @else
-            <p class="lead"><em>No se ha encontrado ningún dato.</em></p>
+            <p class="lead"><em>No se ha encontrado ningún director registrado.</em></p>
         @endif
 
         <div class="pagination-container">
