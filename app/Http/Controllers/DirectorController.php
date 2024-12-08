@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Director;
-use App\Models\Pelicula;
-use App\Models\Premio;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class DirectorController extends Controller
 {
@@ -18,12 +15,13 @@ class DirectorController extends Controller
         return view('directores.index', compact('directores'));
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
         $director = Director::with(['peliculas', 'premios'])->findOrFail($id);
+        $referer = $request->input('referer', route('directores.index'));
         $peliculas = $director->peliculas()->paginate(5);
 
-        return view('directores.show', compact('director', 'peliculas'));
+        return view('directores.show', compact('director', 'peliculas', 'referer'));
     }
 
     public function create()
@@ -66,76 +64,21 @@ class DirectorController extends Controller
                 return redirect()->back()->withErrors($erroresFechas)->withInput();
             }
 
-            // Validar coherencia entre fechas
+
             if ($inicioActividadYear && $nacimientoYear && $inicioActividadYear < $nacimientoYear) {
                 return redirect()->back()->withErrors([
                     'inicio_actividad' => 'La fecha de inicio de actividad no puede ser anterior a la fecha de nacimiento.'
                 ])->withInput();
             }
 
-            $data = $request->except(['imagen', 'premios']);
+            $data = $request->except(['imagen']);
             $data['fecha_nac'] = $request->filled('fecha_nac') ? $request->input('fecha_nac') : null;
             $data['inicio_actividad'] = $request->filled('inicio_actividad') ? $request->input('inicio_actividad') : null;
             $data['fin_actividad'] = $request->filled('fin_actividad')? $request->input('fin_actividad') : null;
 
-
-            /*if($request->has('premios')){
-                foreach ($request->input('premios') as $index => $premio) {
-
-                    if ($nacimientoYear && $premio['anio'] < $nacimientoYear) {
-                        return redirect()->back()
-                            ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del director ({$nacimientoYear})."
-                            ])->withInput();
-                    }
-
-                    if ($inicioActividadYear && $premio['anio'] < $inicioActividadYear) {
-                        return redirect()->back()
-                            ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser  anterior al inicio de actividad del director ({$inicioActividadYear})."
-                            ])->withInput();
-                    }
-
-                    if (!empty($premio['pelicula_id'])) {
-                        $pelicula = Pelicula::findOrFail($premio['pelicula_id']);
-                        if ($pelicula) {
-                            $anioEstreno = Carbon::parse($pelicula->estreno)->year;
-                            $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
-
-                            if ($premio['anio'] < $anioEstreno) {
-                                return redirect()->back()->withErrors([
-                                    'anio' => "El año del premio debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
-                                ])->withInput();
-                            } elseif ($premio['anio'] > $anioSiguienteEstreno) {
-                                return redirect()->back()->withErrors([
-                                    'anio' => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
-                                ])->withInput();
-                            }
-                        }
-                    }
-
-                    if ($this->validarPremiosDuplicados($premio)) {
-                        return redirect()->back()->withErrors([
-                            'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
-                        ])->withInput();
-                    }
-                }
-            }*/
-
-
             $director = Director::create($data);
 
-            /*if ($request->has('premios')) {
-                foreach ($request->input('premios', []) as $premioData) {
-                    $nombre = $premioData['nombre'];
-                    $imagen = $this->getImagenPorNombre($nombre);
-                    $director->premios()->create(array_merge(
-                        $premioData, ['imagen' => $imagen]));
-                }
-            }*/
-
             if ($request->hasFile('imagen')) {
-
                 $director->imagen = $this->procesarImagen($director, $request->file('imagen'));
             }
 
@@ -150,10 +93,9 @@ class DirectorController extends Controller
 
     public function edit($id)
     {
-        $director = Director::with('premios')->findOrFail($id);
-        $peliculas = Pelicula::orderBy('titulo', 'asc')->get();
+        $director = Director::findOrFail($id);
 
-        return view('directores.edit', compact('director', 'peliculas'));
+        return view('directores.edit', compact('director'));
     }
 
     public function update(Request $request, $id)
@@ -167,10 +109,6 @@ class DirectorController extends Controller
             'fin_actividad' => 'nullable|integer|digits:4|before_or_equal:' . now()->year,
             'activo' => 'boolean',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'premios.*.nombre' => 'required|string|max:255',
-            'premios.*.categoria' => 'required|string|max:255',
-            'premios.*.anio' => 'required|integer|min:1900|max:' . now()->year,
-            'premios.*.pelicula_id' => 'nullable|exists:peliculas,id',
         ], $this->mensajes());
 
         try {
@@ -188,53 +126,15 @@ class DirectorController extends Controller
                 ? $request->input('fin_actividad')
                 : null;
 
-            // Validar coherencia entre fechas
+
             $erroresFechas = $this->validarFechas($nacimientoYear, $inicioActividadYear, $finActividadYear);
             if ($erroresFechas) {
                 return redirect()->back()->withErrors($erroresFechas)->withInput();
             }
 
-            foreach ($request->input('premios', []) as $index => $premio) {
-                if ($nacimientoYear && $premio['anio'] < $nacimientoYear) {
-                    return redirect()->back()->withErrors([
-                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de nacimiento del director ({$nacimientoYear})."
-                    ])->withInput();
-                }
 
-                if ($inicioActividadYear && $premio['anio'] < $inicioActividadYear) {
-                    return redirect()->back()->withErrors([
-                        "premios.{$index}.anio" => "El año del premio no puede ser anterior al inicio de actividad del director ({$inicioActividadYear})."
-                    ])->withInput();
-                }
+            $director->update($request->except('imagen'));
 
-                if (!empty($premio['pelicula_id'])) {
-                    $pelicula = Pelicula::findOrFail($premio['pelicula_id']);
-                    if ($pelicula) {
-                        $anioEstreno = Carbon::parse($pelicula->estreno)->year;
-                        $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
-
-                        if ($premio['anio'] < $anioEstreno) {
-                            return redirect()->back()->withErrors([
-                                'anio' => "El año del premio debe ser igual o posterior al año de estreno de la película ($anioEstreno)."
-                            ])->withInput();
-                        } elseif ($premio['anio'] > $anioSiguienteEstreno) {
-                            return redirect()->back()->withErrors([
-                                'anio' => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
-                            ])->withInput();
-                        }
-                    }
-                }
-
-                if ($this->validarPremiosDuplicados($premio)) {
-                    return redirect()->back()->withErrors([
-                        'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
-                    ])->withInput();
-                }
-            }
-
-            $director->update($request->except('imagen', 'premios', 'premios_eliminar'));
-
-            $this->procesarPremios($director, $request->input('premios', []), $request->input('premios_eliminar', ''));
 
 
 
@@ -258,14 +158,8 @@ class DirectorController extends Controller
         try {
             $director = Director::findOrFail($id);
 
-            if ($director->imagen!= Director::$IMAGEN_DEFAULT && Storage::exists($director->imagen)) {
-                Storage::delete($director->imagen);
-            }
-            $director->imagen = Director::$IMAGEN_DEFAULT;
-            $director->save();
-
             $director->delete();
-            return redirect()->route('directores.index')->with('success', 'Director eliminado correctamente.');
+            return redirect()->route('admin.directores')->with('success', 'Director eliminado correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Error al eliminar el director.']);
         }
@@ -319,17 +213,6 @@ class DirectorController extends Controller
             'imagen.image' => 'El campo imagen debe ser una imagen válida',
             'imagen.mimes' => 'El campo imagen solo puede ser una imagen de tipo JPEG, PNG, JPG, GIF o SVG',
             'imagen.max' => 'El tamaño máximo de la imagen es de 2MB',
-
-            'premios.*.nombre.required' => 'El campo nombre del premio es obligatorio',
-            'premios.*.nombre.string' => 'El campo nombre del premio debe ser una cadena de caracteres',
-
-            'premios.*.categoria.required' => 'El campo categoría del premio es obligatorio',
-            'premios.*.categoria.string' => 'El campo categoría del premio debe ser una cadena de caracteres',
-
-            'premios.*.anio.required' => 'El campo año del premio es obligatorio',
-            'premios.*.anio.integer' => 'El campo año del premio debe ser un número entero',
-            'premios.*.anio.min' => 'El año del premio debe ser un número mayor o igual a 1900',
-            'premios.*.anio.max' => 'El año del premio debe ser un número menor o igual a '. now()->year,
         ];
     }
 
@@ -359,31 +242,8 @@ class DirectorController extends Controller
     }
 
 
-    public function getImagenPorNombre($nombre)
-    {
-        $imagenesPremios = [
-            'oscar' => 'premios/oscar.jpg',
-            'golden globe' => 'premios/golden_globe.jpg',
-            'bafta' => 'premios/bafta.jpg',
-            'cannes' => 'premios/cannes.jpg',
-            'goya' => 'premios/goya.jpg',
-            'saturn award' => 'premios/saturn_award.jpg',
-            'directors guild of america' => 'premios/DGAAward.png'
-            // Agrega más asociaciones aquí
-        ];
-
-        $nombreMin = strtolower($nombre);
-        // Buscar la imagen según el nombre del premio
-        $imagen = $imagenesPremios[$nombreMin] ?? Premio::$IMAGEN_DEFAULT;
-
-        return $imagen;
-    }
-
     private function procesarImagen($director, $imagen)
     {
-        if ($director->imagen != Director::$IMAGEN_DEFAULT && Storage::exists($director->imagen)) {
-            Storage::delete($director->imagen);
-        }
 
         $extension = $imagen->getClientOriginalExtension();
         $fileToSave = $director->id . '.' . $extension;
@@ -391,36 +251,7 @@ class DirectorController extends Controller
         return $imagen->storeAs('directores', $fileToSave, 'public');
     }
 
-    private function validarPremiosDuplicados($premio)
-    {
-        return Premio::where('nombre', $premio['nombre'])
-            ->where('categoria', $premio['categoria'])
-            ->where('anio', $premio['anio'])
-            ->where('id', '!=', $premio['id'] ?? null)
-            ->exists();
-    }
 
-    private function procesarPremios($director, array $premios, $premiosEliminar)
-    {
-        $premiosIds = [];
-        foreach ($premios as $data) {
-            if (isset($data['id'])) {
-                $premio = Premio::findOrFail($data['id']);
-                if ($premio->nombre !== $data['nombre']) {
-                    $data['imagen'] = $this->getImagenPorNombre($data['nombre']);
-                }
-                $premio->update($data);
-                $premiosIds[] = $premio->id;
-            } else {
-                $data['imagen'] = $this->getImagenPorNombre($data['nombre']);
-                $nuevoPremio = $director->premios()->create($data);
-                $premiosIds[] = $nuevoPremio->id;
-            }
-        }
 
-        if ($premiosEliminar) {
-            $idsEliminar = explode(',', $premiosEliminar);
-            $director->premios()->whereIn('id', $idsEliminar)->delete();
-        }
-    }
+
 }

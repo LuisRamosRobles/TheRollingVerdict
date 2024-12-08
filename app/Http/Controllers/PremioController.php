@@ -31,7 +31,7 @@ class PremioController extends Controller
     public function create()
     {
         $premio = new Premio();
-        $peliculas = Pelicula::all();
+        $peliculas = Pelicula::with('actores')->get();
         $directores = Director::all();
         $actores = Actor::all();
 
@@ -40,14 +40,21 @@ class PremioController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
 
         $request->validate([
             'nombre' => 'required|string',
             'categoria' => 'required|string',
             'anio' => 'required|integer|min:1900|max:' . now()->year,
             'entidad_type' => 'required|string|in:App\Models\Pelicula,App\Models\Director,App\Models\Actor',
-            'entidad_id' => 'required|integer',
+            'entidad_id' => [
+                'required',
+                function ($attribute, $value, $fail) use ($request) {
+                    $modelClass = $request->input('entidad_type');
+                    if (!class_exists($modelClass) || !$modelClass::where('id', $value)->exists()) {
+                        $fail('El ID de la entidad seleccionada no es válido.');
+                    }
+                },
+            ],
             'pelicula_id' => 'nullable|exists:peliculas,id'
         ], $this->mensajes());
 
@@ -78,10 +85,10 @@ class PremioController extends Controller
             } elseif ($entidadType === 'App\Models\Director') {
                 $director = Director::findOrFail($entidadId);
                 $anioNacDirector = Carbon::parse($director->fecha_nac)->year;
-                $anioInicioActividadDirector = Carbon::parse($director->inicio_actividad)->year;
+                $anioInicioActividadDirector = (int) $director->inicio_actividad;
 
                 if ($peliculaId) {
-                    // Validar los años en relación con la película asociada
+
                     $pelicula = Pelicula::findOrFail($peliculaId);
                     $anioEstreno = Carbon::parse($pelicula->estreno)->year;
                     $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
@@ -109,10 +116,10 @@ class PremioController extends Controller
             } elseif ($entidadType === 'App\Models\Actor') {
                 $actor = Actor::findOrFail($entidadId);
                 $anioNacActor = Carbon::parse($actor->fecha_nac)->year;
-                $anioInicioActividadActor = Carbon::parse($actor->inicio_actividad)->year;
+                $anioInicioActividadActor = (int) $actor->inicio_actividad;
 
                 if ($peliculaId) {
-                    // Validar los años en relación con la película asociada
+
                     $pelicula = Pelicula::findOrFail($peliculaId);
                     $anioEstreno = Carbon::parse($pelicula->estreno)->year;
                     $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
@@ -139,16 +146,19 @@ class PremioController extends Controller
                 }
             }
 
-            // Verificar si ya existe el premio
-            $premioExistente = Premio::where('nombre', $nombre)
-                ->where('categoria', $categoria)
-                ->where('anio', $anio)
-                ->exists();
 
-            if ($premioExistente) {
-                return redirect()->back()->withErrors([
-                    'error' => 'Ya hay un premio con esas características asociado a una entidad.'
-                ])->withInput();
+            if ($peliculaId) {
+                $premioExistente = Premio::where('nombre', $nombre)
+                    ->where('categoria', $categoria)
+                    ->whereIn('anio', [$anioEstreno, $anioSiguienteEstreno])
+                    ->where('pelicula_id', $peliculaId)
+                    ->exists();
+
+                if ($premioExistente) {
+                    return redirect()->back()->withErrors([
+                        'error' => "Ya existe un premio '$nombre' en la categoría '$categoria' para la película seleccionada en el año de estreno o el siguiente."
+                    ])->withInput();
+                }
             }
 
             switch ($request->input('entidad_type')) {
@@ -187,7 +197,7 @@ class PremioController extends Controller
         $directores = Director::all();
         $actores = Actor::all();
 
-        //dd(compact('premio', 'peliculas', 'directores', 'actores'));
+
 
         return view('premios.edit', compact('premio', 'peliculas', 'directores', 'actores'));
     }
@@ -199,12 +209,20 @@ class PremioController extends Controller
             'categoria' => 'required|string',
             'anio' => 'required|integer|min:1900|max:' . now()->year,
             'entidad_type' => 'required|string|in:App\Models\Pelicula,App\Models\Director,App\Models\Actor',
-            'entidad_id' => 'required|integer',
+            'entidad_id' => [
+                'required',
+                function ($attribute, $value, $fail) use ($request) {
+                    $modelClass = $request->input('entidad_type');
+                    if (!class_exists($modelClass) || !$modelClass::where('id', $value)->exists()) {
+                        $fail('El ID de la entidad seleccionada no es válido.');
+                    }
+                },
+            ],
             'pelicula_id' => 'nullable|exists:peliculas,id'
         ];
-        try {
 
-            $request->validate($rules, $this->mensajes());
+        $request->validate($rules, $this->mensajes());
+        try {
 
             $premio = Premio::findOrFail($id);
 
@@ -236,7 +254,7 @@ class PremioController extends Controller
                 $anioInicioActividadDirector = $director->inicio_actividad;
 
                 if ($peliculaId) {
-                    // Validar los años en relación con la película asociada
+
                     $pelicula = Pelicula::findOrFail($peliculaId);
                     $anioEstreno = Carbon::parse($pelicula->estreno)->year;
                     $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
@@ -268,7 +286,7 @@ class PremioController extends Controller
                 $anioInicioActividadActor = $actor->inicio_actividad;
 
                 if ($peliculaId) {
-                    // Validar los años en relación con la película asociada
+
                     $pelicula = Pelicula::findOrFail($peliculaId);
                     $anioEstreno = Carbon::parse($pelicula->estreno)->year;
                     $anioSiguienteEstreno = Carbon::parse($pelicula->estreno)->addYear()->year;
@@ -297,8 +315,8 @@ class PremioController extends Controller
 
             $premioExistente = Premio::where('nombre', $nombre)
                 ->where('categoria', $categoria)
-                ->where('anio', $anio)
-                ->where('id', '!=', $id) // Ignorar el premio actual
+                ->whereIn('anio', [$anioEstreno, $anioSiguienteEstreno])
+                ->where('id', '!=', $id)
                 ->exists();
 
             if ($premioExistente) {
@@ -340,7 +358,7 @@ class PremioController extends Controller
             return redirect()->route('premios.show', $premio->id)->with('success', 'Premio editado correctamente');
 
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al actualizar el premio.']);
+            return redirect()->back()->withErrors(['error' => 'Error al actualizar el premio: ' . $e->getMessage()]);
         }
 
     }
@@ -351,8 +369,7 @@ class PremioController extends Controller
             $premio = Premio::findOrFail($id);
             $premio->delete();
 
-
-            return redirect()->route('premios.index')->with('success', 'Premio eliminado correctamente');
+            return redirect()->route('admin.premios')->with('success', 'Premio eliminado correctamente');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Error al eliminar el premio.']);
         }
@@ -408,11 +425,11 @@ class PremioController extends Controller
             'goya' => 'premios/goya.jpg',
             'saturn award' => 'premios/saturn_award.jpg',
             'directors guild of america' => 'premios/DGAAward.png'
-            // Agrega más asociaciones aquí
+
         ];
 
         $nombreMin = strtolower($nombre);
-        // Buscar la imagen según el nombre del premio
+
         $imagen = $imagenesPremios[$nombreMin] ?? Premio::$IMAGEN_DEFAULT;
 
         return $imagen;

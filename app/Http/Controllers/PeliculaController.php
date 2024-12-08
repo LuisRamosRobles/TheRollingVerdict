@@ -16,16 +16,17 @@ class PeliculaController extends Controller
 {
     public function index(Request $request)
     {
-        $peliculas = Pelicula::search($request->search)->orderBy('estreno', 'desc')->paginate(3);
+        $peliculas = Pelicula::search($request->search)->orderBy('estreno', 'desc')->paginate(4);
 
         return view('peliculas.index', compact('peliculas'));
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
         $pelicula = Pelicula::with(['generos', 'director', 'premios', 'actores'])->findOrFail($id);
+        $referer = $request->input('referer', route('peliculas.index'));
 
-        return view('peliculas.show', compact('pelicula'));
+        return view('peliculas.show', compact('pelicula', 'referer'));
     }
 
     public function create()
@@ -41,6 +42,8 @@ class PeliculaController extends Controller
 
     public function store(Request $request)
     {
+
+
         $request->validate([
             'titulo' => 'required|min:1|max:120',
             'generos' => 'required|array',
@@ -51,11 +54,7 @@ class PeliculaController extends Controller
             'reparto' => 'array',
             'reparto.*' => 'exists:actores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'premios.*.nombre' => 'required|string',
-            'premios.*.categoria' => 'required|string',
-            'premios.*.anio' => 'required|integer|min:1900|max:' . now()->year,
         ], $this->mensajes());
-
 
 
         try {
@@ -79,31 +78,10 @@ class PeliculaController extends Controller
                 ])->withInput();
             }
 
-            if ($request->has('premios')) {
-                foreach ($request->input('premios') as $index => $premio) {
-                    if ($anioEstreno && $premio['anio'] < $anioEstreno) {
-                        return redirect()->back()
-                            ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de estreno de la película ({$anioEstreno})."
-                            ])->withInput();
-                    } elseif ($anioSiguienteEstreno && $premio['anio'] > $anioSiguienteEstreno) {
-                        return redirect()->back()
-                            ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
-                            ])->withInput();
-                    }
-
-                    if ($this->validarPremiosDuplicados($premio)) {
-                        return redirect()->back()->withErrors([
-                            'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
-                        ])->withInput();
-                    }
-
-                }
-            }
 
 
-            $pelicula = Pelicula::create($request->except(['imagen', 'generos', 'reparto','premios']));
+
+            $pelicula = Pelicula::create($request->except(['imagen', 'generos', 'reparto']));
 
             if ($request->hasFile('imagen')){
                 $imagen = $request->file('imagen');
@@ -112,14 +90,6 @@ class PeliculaController extends Controller
                 $pelicula->imagen = $imagen->storeAs('peliculas', $fileToSave, 'public');
             }
 
-            if ($request->has('premios')){
-                foreach ($request->input('premios', []) as $premioData) {
-                    $nombre = $premioData['nombre'];
-                    $imagen = $this->getImagenPorNombre($nombre);
-                    $pelicula->premios()->create(array_merge(
-                        $premioData, ['imagen' => $imagen]));
-                }
-            }
 
             if ($request->has('generos')){
                 $pelicula->generos()->sync($request->input('generos'));
@@ -144,17 +114,14 @@ class PeliculaController extends Controller
         $generos = Genero::orderBy('nombre', 'asc')->get();
         $directores = Director::where('activo', true)->get();
 
-        //dd($pelicula->actores);
 
-        // Actores que están actualmente seleccionados en el reparto
         $repartoSeleccionado = $pelicula->actores;
 
-        // Actores activos que no están en el reparto
+
         $actoresDisponibles = Actor::where('activo', true)
             ->whereNotIn('id', $repartoSeleccionado->pluck('id'))
+            ->orderBy('nombre', 'asc')
             ->get();
-
-        //dd($repartoSeleccionado, $actoresDisponibles);
 
         return view('peliculas.edit', compact(
             'pelicula',
@@ -177,9 +144,6 @@ class PeliculaController extends Controller
             'reparto' => 'required|array',
             'reparto.*' => 'exists:actores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'premios.*.nombre' => 'required|string|max:255',
-            'premios.*.categoria' => 'required|string|max:255',
-            'premios.*.anio' => 'required|integer|min:1900|max:' . now()->year,
         ], $this->mensajes());
 
         try{
@@ -204,60 +168,14 @@ class PeliculaController extends Controller
                 ])->withInput();
             }
 
-            if ($request->has('premios')) {
-                foreach ($request->input('premios') as $index => $premio) {
-                    if ($anioEstreno && $premio['anio'] < $anioEstreno) {
-                        return redirect()->back()
-                            ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio no puede ser anterior al año de estreno de la película ({$anioEstreno})."
-                            ])
-                            ->withInput();
-                    } elseif ($anioSiguienteEstreno && $premio['anio'] > $anioSiguienteEstreno) {
-                        return redirect()->back()
-                            ->withErrors([
-                                "premios.{$index}.anio" => "El año del premio debe coincidir con el año de estreno ($anioEstreno) o ser el año siguiente ($anioSiguienteEstreno)."
-                            ])->withInput();
-                    }
-
-                    if ($this->validarPremiosDuplicados($premio)) {
-                        return redirect()->back()->withErrors([
-                            'error' => 'El premio que intentas asociar con esas características ya existe en la base de datos.'
-                        ])->withInput();
-                    }
-
-                }
-            }
 
 
-
-            $pelicula->update($request->except('imagen', 'generos', 'premios', 'reparto'));
+            $pelicula->update($request->except('imagen', 'generos','reparto'));
 
             if ($request->has('reparto')) {
-                //dd($request->input('reparto'));
                 $pelicula->actores()->sync($request->input('reparto'));
             }
 
-            $premiosIds = [];
-            foreach ($request->input('premios', []) as $data) {
-                if (isset($data['id'])) {
-                    $premio = Premio::findOrFail($data['id']);
-                    if ($premio->nombre !== $data['nombre']) {
-                        $data['imagen'] = $this->getImagenPorNombre($data['nombre']);
-                    }
-                    $premio->update($data);
-                    $premiosIds[] = $premio->id;
-                } else {
-                    $nuevoPremio = $pelicula->premios()->create($data);
-                    $premiosIds[] = $nuevoPremio->id;
-                }
-            }
-
-            if ($request->filled('premios_eliminar')) {
-                $idsEliminar = explode(',', $request->input('premios_eliminar'));
-                $pelicula->premios()
-                    ->whereIn('id', $idsEliminar)
-                    ->delete(); // Soft delete
-            }
 
             if ($request->hasFile('imagen')) {
                 if ($pelicula->imagen != Pelicula::$IMAGEN_DEFAULT && Storage::exists($pelicula->imagen)) {
@@ -285,15 +203,10 @@ class PeliculaController extends Controller
     {
         try {
             $pelicula = Pelicula::findOrFail($id);
-            if ($pelicula->imagen && $pelicula->imagen != Pelicula::$IMAGEN_DEFAULT) {
-                Storage::disk('public')->delete($pelicula->imagen);
-            }
-            $pelicula->imagen = Pelicula::$IMAGEN_DEFAULT;
-            $pelicula->save();
 
             $pelicula->delete();
 
-            return redirect()->route('peliculas.index')->with('success', 'Película eliminada con éxito.');
+            return redirect()->route('admin.peliculas')->with('success', 'Película eliminada con éxito.');
         }catch (\Exception $e){
             return redirect()->back()->withErrors(['error' => 'Error al eliminar la película.']);
         }
@@ -347,49 +260,7 @@ class PeliculaController extends Controller
             'imagen.image' => 'El archivo seleccionado no es una imagen.',
             'imagen.mimes' => 'El archivo seleccionado debe ser una imagen en formato jpeg, png, jpg, gif o svg.',
             'imagen.max' => 'El tamaño máximo de la imagen es de 2MB.',
-
-            'premios.*.nombre.required' => 'El campo nombre del premio es obligatorio.',
-            'premios.*.nombre.string' => 'El campo nombre del premio debe ser una cadena.',
-            'premios.*.nombre.max' => 'El campo nombre del premio no puede superar los 255 caracteres.',
-
-            'premios.*.categoria.required' => 'El campo categoría del premio es obligatorio.',
-            'premios.*.categoria.string' => 'El campo categoría del premio debe ser una cadena.',
-            'premios.*.categoria.max' => 'El campo categoría del premio no puede superar los 255 caracteres.',
-
-            'premios.*.anio.required' => 'El campo año del premio es obligatorio.',
-            'premios.*.anio.integer' => 'El campo año del premio debe ser un número entero.',
-            'premios.*.anio.min' => 'El campo año del premio debe ser al menos 1900.',
-            'premios.*.anio.max' => 'El campo año del premio no puede superar '. now()->year,
         ];
 
-    }
-
-    public function getImagenPorNombre($nombre)
-    {
-        $imagenesPremios = [
-            'oscar' => 'premios/oscar.jpg',
-            'golden globe' => 'premios/golden_globe.jpg',
-            'bafta' => 'premios/bafta.jpg',
-            'cannes' => 'premios/cannes.jpg',
-            'goya' => 'premios/goya.jpg',
-            'saturn award' => 'premios/saturn_award.jpg',
-            'directors guild of america' => 'premios/DGAAward.png'
-            // Agrega más asociaciones aquí
-        ];
-
-        $nombreMin = strtolower($nombre);
-        // Buscar la imagen según el nombre del premio
-        $imagen = $imagenesPremios[$nombreMin] ?? Premio::$IMAGEN_DEFAULT;
-
-        return $imagen;
-    }
-
-    private function validarPremiosDuplicados($premio)
-    {
-        return Premio::where('nombre', $premio['nombre'])
-            ->where('categoria', $premio['categoria'])
-            ->where('anio', $premio['anio'])
-            ->where('id', '!=', $premio['id'] ?? null)
-            ->exists();
     }
 }

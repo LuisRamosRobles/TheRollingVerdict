@@ -10,7 +10,7 @@ class GeneroController extends Controller
 {
     public function index(Request $request)
     {
-        $generos = Genero::search($request->search)->orderBy('nombre', 'asc')->paginate(4);
+        $generos = Genero::search($request->search)->orderBy('nombre', 'asc')->paginate(8);
 
         return view('generos.index', compact('generos'));
     }
@@ -92,15 +92,10 @@ class GeneroController extends Controller
     {
         try{
             $genero = Genero::findOrFail($id);
-            if ($genero->imagen != Genero::$IMAGEN_DEFAULT && Storage::exists($genero->imagen)){
-                Storage::disk('public')->delete($genero->imagen);
-            }
-            $genero->imagen = Genero::$IMAGEN_DEFAULT;
-            $genero->save();
 
             $genero->delete();
 
-            return redirect()->route('generos.index')->with('success', 'Género eliminado con éxito.');
+            return redirect()->route('admin.generos')->with('success', 'Género eliminado con éxito.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Error al eliminar el genero.']);
         }
