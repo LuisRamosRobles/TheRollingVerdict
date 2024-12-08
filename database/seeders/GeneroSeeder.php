@@ -35,7 +35,7 @@ class GeneroSeeder extends Seeder
         Genero::create(['nombre' => 'Deportiva', 'imagen' => 'generos/19.jpg']);
         Genero::create(['nombre' => 'Familiar', 'imagen' => 'generos/20.jpg']);
         Genero::create(['nombre' => 'Infantil', 'imagen' => 'generos/21.jpg']);
-        Genero::create(['nombre' => 'Cortometraje', 'imagen' => 'generos/22.jpg']);
+        Genero::create(['nombre' => 'Cortometraje', 'imagen' => 'generos/2.jpg']);
         Genero::create(['nombre' => 'Experimental', 'imagen' => 'generos/23.jpg']);
         Genero::create(['nombre' => 'Thriller', 'imagen' => 'generos/24.jpg']);
         Genero::create(['nombre' => 'Noir']);

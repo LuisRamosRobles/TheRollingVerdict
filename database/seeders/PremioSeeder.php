@@ -72,14 +72,14 @@ class PremioSeeder extends Seeder
                 'categoria' => 'Mejor Guion Original',
                 'anio' => 2011,
                 'imagen' => 'premios/oscar.jpg',
-                'pelicula_id' => 2
+                'pelicula_id' => 3
             ],
             [
                 'nombre' => 'BAFTA',
                 'categoria' => 'Mejor Dirección',
                 'anio' => 2011,
                 'imagen' => 'premios/bafta.jpg',
-                'pelicula_id' => 2
+                'pelicula_id' => 3
             ],
         ]);
 
