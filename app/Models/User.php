@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,6 +13,7 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
     use SoftDeletes;
+    public static string $IMAGEN_DEFAULT = 'https://placehold.co/100x100';
 
     /**
      * The attributes that are mass assignable.
@@ -50,7 +51,7 @@ class User extends Authenticatable
         ];
     }
 
-    // Relación tabla Reseñas
+
     public function resenas()
     {
         return $this->hasMany(Resena::class, "user_id");

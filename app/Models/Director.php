@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Director extends Model
 {
+    use HasFactory;
     use SoftDeletes;
     public static string $IMAGEN_DEFAULT = 'https://placehold.co/230x340';
     protected $table = 'directores';
@@ -48,7 +50,7 @@ class Director extends Model
             return null;
         }
 
-        $fin = $this->fin_actividad ?? Carbon::now()->year; // Usa el año actual si no hay fecha de retiro
+        $fin = $this->fin_actividad ?? Carbon::now()->year;
         return $fin - $this->inicio_actividad;
     }
 

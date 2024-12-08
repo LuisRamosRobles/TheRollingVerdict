@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Actor extends Model
 {
+    use HasFactory;
     use SoftDeletes;
     public static string $IMAGEN_DEFAULT = 'https://placehold.co/230x340';
     protected $table = 'actores';

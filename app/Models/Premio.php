@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Premio extends Model
 {
+    use HasFactory;
     use SoftDeletes;
     public static string $IMAGEN_DEFAULT = 'https://placehold.co/230x340';
     protected $table = 'premios';
@@ -23,8 +25,7 @@ class Premio extends Model
 
     public function scopeSearch($query, $search)
     {
-        return $query->whereRaw('LOWER(nombre) LIKE ?', ["%" . strtolower($search) . "%"])
-            ->orWhereRaw('LOWER(categoria) LIKE ?', ["%" . strtolower($search) . "%"]);
+        return $query->whereRaw('LOWER(nombre) LIKE ?', ["%" . strtolower($search) . "%"]);
     }
 
     public function entidad()

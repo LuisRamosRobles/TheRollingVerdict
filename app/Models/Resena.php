@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Resena extends Model
 {
-    use SoftDeletes;
+    use HasFactory;
 
     protected $table = 'resenas';
 
@@ -18,14 +19,14 @@ class Resena extends Model
         'comentario'
     ];
 
-    // Relación Tabla Usuarios
+
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relación Tabla Películas
+
     public function pelicula ()
     {
         return $this->belongsTo(Pelicula::class, 'pelicula_id');

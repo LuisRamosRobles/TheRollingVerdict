@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 class Pelicula extends Model
 {
+    use HasFactory;
     use SoftDeletes;
     public static string $IMAGEN_DEFAULT = 'https://placehold.co/230x340';
     protected $table = 'peliculas';
@@ -35,9 +37,10 @@ class Pelicula extends Model
         return Cache::remember($cacheKey, now()->addMinutes(10), function (){
             return $this->resenas()->avg('calificacion') ?: 0;
         });
+
     }
 
-    // Relación tabla Reseñas
+
     public function resenas()
     {
         return $this->hasMany(Resena::class, "pelicula_id");

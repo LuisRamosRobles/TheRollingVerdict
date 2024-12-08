@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Genero extends Model
 {
+    use HasFactory;
     use SoftDeletes;
     public static string $IMAGEN_DEFAULT = 'https://placehold.co/380x220';
     protected  $table = 'generos';
