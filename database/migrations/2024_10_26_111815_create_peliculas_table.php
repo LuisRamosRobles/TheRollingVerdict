@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('sinopsis');
             $table->string('imagen')->default(Pelicula::$IMAGEN_DEFAULT);
             $table->foreignId('director_id')->constrained('directores')->onDelete('cascade');
-            $table->softDeletes();  // Campo deleted_at para softDeletes
+            $table->softDeletes();
             $table->timestamps();
         });
     }
