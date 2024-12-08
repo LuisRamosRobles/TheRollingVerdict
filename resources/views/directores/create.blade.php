@@ -72,7 +72,7 @@
         </div>
 
         <button class="btn btn-primary" type="submit">Crear</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('directores.index') }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('admin.directores') }}">Volver</a>
     </form>
 
     <script>
@@ -90,10 +90,10 @@
                 }
             }
 
-            // Inicializar visibilidad en carga
+
             actualizarVisibilidadFinActividad();
 
-            // Actualizar visibilidad al cambiar el estado de los radios
+
             activoSiRadio.addEventListener('change', actualizarVisibilidadFinActividad);
             activoNoRadio.addEventListener('change', actualizarVisibilidadFinActividad);
 

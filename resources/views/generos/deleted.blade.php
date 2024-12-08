@@ -6,6 +6,16 @@
 @section('title', 'Géneros Eliminados')
 
 @section('content')
+    @if(session('success'))
+        <br>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <br>
+    @endif
 
     <div class="generos">
         <h1>Géneros Eliminados</h1>
@@ -16,12 +26,18 @@
                     <div class="col-md-3">
                         <div class="card h-100">
                             <div class="card-body">
-                                <img alt="Imagen por defecto" class="img-fluid"
+
+                                @if($genero->imagen != Genero::$IMAGEN_DEFAULT)
+                                    <img alt="Imagen de {{ $genero->nombre }}" class="img-fluid"
+                                         src="{{ asset('storage/' . $genero->imagen) }}"
+                                         width="230px" height="340px">
+                                @else
+                                    <img alt="Imagen por defecto" class="img-fluid"
                                          src="{{ Genero::$IMAGEN_DEFAULT }}">
+                                @endif
 
                                 <h6 class="card-title">{{ $genero->nombre }}</h6>
 
-                                <!-- Botón para restaurar el género -->
                                 <form action="{{ route('generos.restore', $genero->id) }}" method="POST" style="display: inline;">
                                     @csrf
                                     <button type="submit" class="btn btn-primary btn-sm mt-2">Restaurar</button>
@@ -40,7 +56,7 @@
         </div>
     </div>
 
-    <a class="btn btn-secondary mx-2 mb-4" href="{{ route('generos.index') }}">Volver</a>
+    <a class="btn btn-secondary mx-2 mb-4" href="{{ route('admin.generos') }}">Volver</a>
 
 @endsection
 @include('footer')

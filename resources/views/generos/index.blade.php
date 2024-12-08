@@ -7,44 +7,43 @@
 
 @section('content')
 
-    <div class="generos">
-        <h1>Directorio Género</h1>
+    <div class="generos text-center">
+        <h1>Directorio de Géneros</h1>
+
+        <form action="{{ route('generos.index') }}" class="search-form" method="get">
+            @csrf
+            <div class="input-group">
+                <input type="text" class="form-control search-input" id="search" name="search" placeholder="Nombre del Genero">
+                <div class="input-group-append">
+                    <button class="btn search-button" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
 
         @if(count($generos) > 0)
-            <div class="row ">
+            <div class="generos-container">
                 @foreach($generos as $genero)
-                    <div class="col-md-3">
-                        <a href="{{ route('generos.show', $genero->id) }}" class="text-decoration-none">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    @if($genero->imagen != Genero::$IMAGEN_DEFAULT)
-                                        <img alt="Imagen del Genero" class="img-fluid"
-                                             src="{{ asset('storage/' . $genero->imagen) }}"
-                                             width="380px" height="220px">
-                                    @else
-                                        <img alt="Imagen por defecto" class="img-fluid"
-                                             src="{{Genero::$IMAGEN_DEFAULT}}">
-                                    @endif
-
-                                    <h6 class="card-title card-title-link">{{$genero->nombre}}</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
+                    <a href="{{ route('generos.show', $genero->id) }}" class="text-decoration-none">
+                        <div class="genero-card">
+                            <img
+                                src="{{ $genero->imagen != Genero::$IMAGEN_DEFAULT ? asset('storage/' . $genero->imagen) : Genero::$IMAGEN_DEFAULT }}"
+                                alt="Imagen de {{ $genero->nombre }}">
+                            <h6>{{ $genero->nombre }}</h6>
+                        </div>
+                    </a>
                 @endforeach
             </div>
         @else
-            <p class="lead"><em>No se ha encontrado ningún genero registrado.</em></p>
+            <p class="lead"><em>No se ha encontrado ningún género registrado.</em></p>
         @endif
 
-        <div class="pagination-container-generos">
-            {{$generos->links('pagination::bootstrap-4')}}
+        <div class="pagination-container">
+            {{ $generos->links('pagination::bootstrap-4') }}
         </div>
-
-        <a class="btn btn-success mb-3" href="{{route('generos.create')}}">Añadir Género Nuevo</a>
-        <a class="btn btn-info mb-3" href="{{route('generos.deleted')}}">Géneros Eliminados</a>
     </div>
 
-
 @endsection
+
 @include('footer')

@@ -62,7 +62,7 @@
                 <div class="col-md-6">
                     <label for="reparto-seleccionado">Reparto Seleccionado:</label>
                     <select id="reparto-seleccionado" class="form-control" size="10" name="reparto[]" multiple>
-                        <!-- Los actores seleccionados se moverán aquí -->
+
                     </select>
                 </div>
             </div>
@@ -84,51 +84,17 @@
         </div>
 
         <div class="form-group">
-            <h3>Premios</h3>
-            <div id="premios-container">
-                <button class="btn btn-primary mb-3" type="button" onclick="agregarPremio()">Agregar Premio</button>
-            </div>
-        </div>
-
-        <div class="form-group">
             <label for="imagen">Imagen:</label>
             <input accept="image/*" class="form-control-file" id="imagen" name="imagen" type="file">
             <small class="form-text text-muted">Tipos de archivos compatibles: jpeg,png,jpg,gif,svg</small>
         </div>
 
         <button class="btn btn-primary" type="submit">Crear</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('peliculas.index') }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('admin.peliculas') }}">Volver</a>
     </form>
 
     <script>
         let premioCount = 0;
-
-        function agregarPremio() {
-            const container = document.getElementById('premios-container');
-            const newPremio = document.createElement('div');
-            newPremio.classList.add('premio-row', 'mb-3');
-            newPremio.innerHTML = `
-            <div class="form-group">
-                <label for="premio-nombre-${premioCount}">Nombre del Premio:</label>
-                <input type="text" name="premios[${premioCount}][nombre]" id="premio-nombre-${premioCount}" class="form-control" placeholder="Ejemplo: Oscar" required>
-            </div>
-            <div class="form-group">
-                <label for="premio-categoria-${premioCount}">Categoría:</label>
-                <input type="text" name="premios[${premioCount}][categoria]" id="premio-categoria-${premioCount}" class="form-control" placeholder="Ejemplo: Mejor Director" required>
-            </div>
-            <div class="form-group">
-                <label for="premio-anio-${premioCount}">Año:</label>
-                <input type="number" name="premios[${premioCount}][anio]" id="premio-anio-${premioCount}" class="form-control" placeholder="Ejemplo: 2022" required>
-            </div>
-            <button type="button" class="btn btn-danger" onclick="eliminarPremio(this)">Eliminar</button>
-        `;
-            container.appendChild(newPremio);
-            premioCount++;
-        }
-
-        function eliminarPremio(button) {
-            button.parentElement.remove();
-        }
 
         document.addEventListener('DOMContentLoaded', function () {
             const actoresDisponibles = document.getElementById('actores-disponibles');
@@ -136,14 +102,14 @@
             const agregarActorBtn = document.getElementById('agregar-actor');
             const removerActorBtn = document.getElementById('remover-actor');
 
-            // Mover actores de "disponibles" a "reparto seleccionado"
+
             agregarActorBtn.addEventListener('click', function () {
                 Array.from(actoresDisponibles.selectedOptions).forEach(option => {
                     repartoSeleccionado.appendChild(option);
                 });
             });
 
-            // Mover actores de "reparto seleccionado" a "disponibles"
+
             removerActorBtn.addEventListener('click', function () {
                 Array.from(repartoSeleccionado.selectedOptions).forEach(option => {
                     actoresDisponibles.appendChild(option);

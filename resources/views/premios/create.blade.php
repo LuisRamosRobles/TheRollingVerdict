@@ -95,8 +95,7 @@
 
         <div class="mt-5" id="grupo-botones">
             <button class="btn btn-primary" type="submit">Crear Premio</button>
-            <a class="btn btn-secondary mx-2" href="{{ route('premios.index') }}">Volver</a>
-            <button class="btn btn-danger mx-2" type="button" onclick="limpiarformulario()">Limpiar Formulario</button>
+            <a class="btn btn-secondary mx-2" href="{{ route('admin.premios') }}">Volver</a>
         </div>
     </form>
 
@@ -117,10 +116,9 @@
             const oldEntidadId = "{{ old('entidad_id') }}";
 
             function actualizarOpciones() {
-                // Limpiar el select
+
                 entidadSelect.innerHTML = "";
 
-                // Cambiar el label según el tipo seleccionado
                 if (peliculaRadio.checked) {
                     entidadLabel.textContent = "Película:";
                     cargarOpciones(peliculas, "titulo");
@@ -139,7 +137,7 @@
                     optionElement.value = opcion.id;
                     optionElement.textContent = opcion[textoPropiedad];
 
-                    // Mantener la selección anterior si corresponde
+
                     if (String(opcion.id) === oldEntidadId) {
                         optionElement.selected = true;
                     }
@@ -148,7 +146,53 @@
                 });
             }
 
-            // Inicializa el estado de los radios y el select
+            function actualizarPeliculasParaDirector(directorId) {
+                const peliculasFiltradas = peliculas.filter(pelicula => pelicula.director_id === parseInt(directorId));
+                const peliculaSelect = document.getElementById("pelicula_id");
+
+                peliculaSelect.innerHTML = "<option value=''>Seleccione una película</option>";
+                peliculasFiltradas.forEach(pelicula => {
+                    const option = document.createElement("option");
+                    option.value = pelicula.id;
+                    option.textContent = pelicula.titulo;
+                    peliculaSelect.appendChild(option);
+                });
+            }
+
+            const directorSelect = document.getElementById("entidad_id");
+            directorSelect.addEventListener("change", function () {
+                if (directorRadio.checked) {
+                    actualizarPeliculasParaDirector(directorSelect.value);
+                }
+            });
+
+            function actualizarPeliculasParaActor(actorId) {
+
+                const peliculasFiltradas = peliculas.filter(pelicula =>
+                    pelicula.actores.some(actor => actor.id === parseInt(actorId))
+                );
+                const peliculaSelect = document.getElementById("pelicula_id");
+
+
+                peliculaSelect.innerHTML = "<option value=''>Seleccione una película</option>";
+                peliculasFiltradas.forEach(pelicula => {
+                    const option = document.createElement("option");
+                    option.value = pelicula.id;
+                    option.textContent = pelicula.titulo;
+                    peliculaSelect.appendChild(option);
+                });
+            }
+
+            const actorSelect = document.getElementById("entidad_id");
+            actorSelect.addEventListener("change", function () {
+                if (actorRadio.checked) {
+                    actualizarPeliculasParaActor(actorSelect.value);
+                }
+            });
+
+
+
+
             if (oldEntidadType === "App\Models\Director") {
                 directorRadio.checked = true;
                 peliculaSelect.style.display = "block";
@@ -160,10 +204,10 @@
                 peliculaSelect.style.display = "none";
             }
 
-            // Inicializar las opciones al cargar la página
+
             actualizarOpciones();
 
-            // Eventos para actualizar el select cuando cambie el radio button
+
             peliculaRadio.addEventListener("change", function () {
                 peliculaSelect.style.display = "none";
                 actualizarOpciones();
@@ -171,10 +215,12 @@
             directorRadio.addEventListener("change", function () {
                 peliculaSelect.style.display = "block";
                 actualizarOpciones();
+                actualizarPeliculasParaDirector(entidadSelect.value);
             });
             actorRadio.addEventListener("change", function () {
                 peliculaSelect.style.display = "block";
                 actualizarOpciones();
+                actualizarPeliculasParaActor(entidadSelect.value);
             });
         });
     </script>

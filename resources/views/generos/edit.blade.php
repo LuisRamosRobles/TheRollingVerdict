@@ -45,7 +45,7 @@
         </div>
 
         <button class="btn btn-primary" type="submit">Actualizar</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('generos.show', $genero->id) }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('admin.generos') }}">Volver</a>
     </form>
 
 @endsection

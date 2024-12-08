@@ -92,39 +92,10 @@
                         name="generos[]"
                         value="{{ $genero->id }}"
                         id="genero{{ $genero->id }}"
-                        {{ $pelicula->generos->contains($genero->id) ? 'checked' : '' }}> <!-- Marcar si el género está asociado -->
+                        {{ $pelicula->generos->contains($genero->id) ? 'checked' : '' }}>
                     <label class="form-check-label" for="genero{{ $genero->id }}">{{ $genero->nombre }}</label>
                 </div>
             @endforeach
-        </div>
-
-        <div class="form-group">
-            <h3>Premios</h3>
-            <input type="hidden" id="premios-eliminar" name="premios_eliminar" value="">
-            <button class="btn btn-primary mb-3" type="button" onclick="agregarPremio()">Agregar Premio</button>
-            <div id="premios-container">
-                @foreach($pelicula->premios as $index => $premio)
-                    <div class="premio-item" data-id="{{ $premio->id }}">
-                        <input type="hidden" name="premios[{{ $index }}][id]" value="{{ $premio->id }}">
-
-                        <div class="form-group">
-                            <label for="premio-nombre-{{ $index }}">Nombre del Premio:</label>
-                            <input type="text" name="premios[{{ $index }}][nombre]" id="premio-nombre-{{ $index }}" class="form-control" value="{{ $premio->nombre }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="premio-categoria-{{ $index }}">Categoría:</label>
-                            <input type="text" name="premios[{{ $index }}][categoria]" id="premio-categoria-{{ $index }}" class="form-control" value="{{ $premio->categoria }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="premio-anio-{{ $index }}">Año:</label>
-                            <input type="number" name="premios[{{ $index }}][anio]" id="premio-anio-{{ $index }}" class="form-control" value="{{ $premio->anio }}" required>
-                        </div>
-
-                        <button type="button" class="btn btn-danger mt-2 mb-4" onclick="eliminarPremio(this, {{ $premio->id }})">Eliminar</button>
-
-                    </div>
-                @endforeach
-            </div>
         </div>
 
         <div class="form-group imagen">
@@ -142,70 +113,13 @@
         </div>
 
         <button class="btn btn-primary" type="submit">Actualizar</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('peliculas.show', $pelicula->id) }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('admin.peliculas') }}">Volver</a>
     </form>
 
     <script>
-        let premioCount = {{ count($pelicula->premios) }};
-        function agregarPremio() {
-            const container = document.getElementById('premios-container');
-            const template = `
-                <div class="premio-item">
-                    <div class="form-group">
-                        <label for="premio-nombre-${premioCount}">Nombre del Premio:</label>
-                        <input type="text" name="premios[${premioCount}][nombre]" id="premio-nombre-${premioCount}" class="form-control" placeholder="Ejemplo: Oscar" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="premio-categoria-${premioCount}">Categoría:</label>
-                        <input type="text" name="premios[${premioCount}][categoria]" id="premio-categoria-${premioCount}" class="form-control" placeholder="Ejemplo: Mejor Director" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="premio-anio-${premioCount}">Año:</label>
-                        <input type="number" name="premios[${premioCount}][anio]" id="premio-anio-${premioCount}" class="form-control" placeholder="Ejemplo: 2022" required>
-                    </div>
+        let repartoArray = [];
 
-                    <button type="button" class="btn btn-danger mb-4" onclick="eliminarPremio(this)">Eliminar</button>
-                </div>`;
-            container.insertAdjacentHTML('beforeend', template);
-            premioCount++;
-        }
 
-        function eliminarPremio(button, premioId = null) {
-            if (confirm('¿Estás seguro de que deseas eliminar este premio?')) {
-
-                const premiosEliminar = document.getElementById('premios-eliminar');
-
-                if (premioId) {
-                    const premiosAEliminar = premiosEliminar.value ? premiosEliminar.value.split(',') : [];
-                    premiosAEliminar.push(premioId);
-                    premiosEliminar.value = premiosAEliminar.join(',');
-                }
-
-                button.closest('.premio-item').remove();
-
-            }
-        }
-
-        const peliculaShowUrl = "{{ route('peliculas.show', $pelicula->id) }}";
-
-        document.getElementById('form-actualizar-pelicula').addEventListener('submit', function (event) {
-            const premiosEliminar = document.getElementById('premios-eliminar').value;
-
-            if (premiosEliminar) {
-                const confirmacion = confirm('Tienes premios marcados para eliminar. ¿Estás seguro de que deseas continuar?');
-
-                if (!confirmacion) {
-                    // Si el usuario cancela, detenemos el envío del formulario
-                    event.preventDefault();
-
-                    window.location.href = peliculaShowUrl
-                }
-            }
-        });
-
-        let repartoArray = []; // Array global para almacenar los valores
-
-        // Función para agregar un valor al array
         function agregarAlReparto(id) {
             if (!repartoArray.includes(id)) {
                 repartoArray.push(id);
@@ -220,25 +134,25 @@
 
 
 
-            // Recorrer todas las opciones en el select "Reparto Seleccionado"
+
             Array.from(repartoSeleccionado.options).forEach(option => {
                 agregarAlReparto(option.value);
             });
 
             console.log('Array inicializado:', repartoArray);
 
-            // Mover actores de "disponibles" a "reparto seleccionado"
+
             agregarActorBtn.addEventListener('click', function () {
                 Array.from(actoresDisponibles.selectedOptions).forEach(option => {
-                    repartoArray.push(option.value); // Agregar al array
+                    repartoArray.push(option.value);
                     repartoSeleccionado.appendChild(option);
                 });
             });
 
-            // Mover actores de "reparto seleccionado" a "disponibles"
+
             removerActorBtn.addEventListener('click', function () {
                 Array.from(repartoSeleccionado.selectedOptions).forEach(option => {
-                    repartoArray = repartoArray.filter(id => id !== option.value); // Eliminar del array
+                    repartoArray = repartoArray.filter(id => id !== option.value);
                     actoresDisponibles.appendChild(option);
                 });
             });
@@ -246,7 +160,7 @@
 
         document.getElementById('form-actualizar-pelicula').addEventListener('submit', function () {
             const repartoSeleccionado = document.getElementById('reparto-seleccionado');
-            repartoSeleccionado.innerHTML = ''; // Limpiar
+            repartoSeleccionado.innerHTML = '';
 
             repartoArray.forEach(id => {
                 const option = document.createElement('option');

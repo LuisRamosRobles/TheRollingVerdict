@@ -7,30 +7,47 @@
 
 @section('content')
 
-    <div class="peliculas">
+    <div class="peliculas text-center">
         <h1>Biblioteca de películas</h1>
 
-        @if(count($peliculas) > 0)
-            <div class="row">
-                @foreach($peliculas as $pelicula)
-                    <div class="col-md-3">
-                        <a href="{{ route('peliculas.show', $pelicula->id) }}" class="text-decoration-none">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    @if($pelicula->imagen != Pelicula::$IMAGEN_DEFAULT)
-                                        <img alt="Imagen de la Pelicula" class="img-fluid"
-                                             src="{{ asset('storage/' . $pelicula->imagen) }}"
-                                             width="230px" height="340px">
-                                    @else
-                                        <img alt="Imagen por defecto" class="img-fluid"
-                                             src="{{Pelicula::$IMAGEN_DEFAULT}}">
-                                    @endif
+        <form action="{{ route('peliculas.index') }}" class="search-form" method="get">
+            @csrf
+            <div class="input-group">
+                <input type="text" class="form-control search-input" id="search" name="search" placeholder="Titulo de la Película">
+                <div class="input-group-append">
+                    <button class="btn search-button" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
 
-                                    <h6 class="card-title card-title-link">{{$pelicula->titulo}}</h6>
+        @if(count($peliculas) > 0)
+            <div class="d-flex flex-wrap justify-content-center mt-4">
+                @foreach($peliculas as $pelicula)
+                    <a href="{{ route('peliculas.show', $pelicula->id) }}" class="text-decoration-none">
+                        <div class="pelicula-card">
+                            <img
+                                src="{{ $pelicula->imagen != Pelicula::$IMAGEN_DEFAULT ? asset('storage/' . $pelicula->imagen) : Pelicula::$IMAGEN_DEFAULT }}"
+                                alt="Imagen de {{ $pelicula->titulo }}">
+
+                            <div class="hover-content">
+                                <div class="nota-media">{{ number_format($pelicula->promedio_calificacion, 1) }}</div>
+                                <div class="rating">
+
+                                    @for($i = 5; $i >= 1; $i--)
+                                        @if($i <= floor($pelicula->promedio_calificacion))
+                                            <span>&#9733;</span>
+                                        @elseif($i == ceil($pelicula->promedio_calificacion))
+                                            <span>&#9734;</span>
+                                        @else
+                                            <span class="empty">&#9733;</span>
+                                        @endif
+                                    @endfor
                                 </div>
                             </div>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 @endforeach
             </div>
         @else
@@ -38,13 +55,10 @@
         @endif
 
         <div class="pagination-container">
-            {{$peliculas->links('pagination::bootstrap-4')}}
+            {{ $peliculas->links('pagination::bootstrap-4') }}
         </div>
-
-        <a class="btn btn-success mb-3" href="{{route('peliculas.create')}}">Añadir Película</a>
-        <a class="btn btn-info mb-3" href="{{route('peliculas.deleted')}}">Películas Eliminadas</a>
     </div>
 
-
 @endsection
+
 @include('footer')

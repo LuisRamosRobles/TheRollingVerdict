@@ -55,7 +55,7 @@
                    value="{{ old('anio', $premio->anio) }}" placeholder="Ejemplo: 2023" required>
         </div>
 
-        <!-- Select para elegir la película (invisible por defecto) -->
+
         <div class="form-group" id="pelicula-select"
              style="display: {{ $premio->entidad_type == 'App\Models\Director' && $premio->pelicula_id ? 'block' : 'none' }};">
             <label for="pelicula_id">Película:</label>
@@ -107,7 +107,7 @@
         </div>
 
         <button class="btn btn-primary" type="submit">Actualizar Premio</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('premios.show', $premio->id) }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('admin.premios') }}">Volver</a>
     </form>
 
     <script>
@@ -155,7 +155,7 @@
                     optionElement.value = opcion.id;
                     optionElement.textContent = opcion[textoPropiedad];
 
-                    // Mantener la selección anterior si corresponde
+
                     if (String(opcion.id) === premioEntidadId) {
                         optionElement.selected = true;
                     }

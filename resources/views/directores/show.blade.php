@@ -34,7 +34,7 @@
          ? ($director->inicio_actividad . ' - ' . ($director->fin_actividad ?? 'Presente') . ' (' . $director->anios_activo . ' años)')
          : 'No disponible' }}
             </p>
-            <p><strong>Activo:</strong>{{ $director->activo ? 'Sí' : 'No' }}</p>
+            <p><strong>Activo:</strong> {{ $director->activo ? 'Sí' : 'No' }}</p>
 
             <h3>Premios:</h3>
             @if ($director->premios->isNotEmpty())
@@ -68,27 +68,36 @@
         <h2>Películas Dirigidas</h2>
         <div class="row">
             @if(count($peliculas) > 0)
-                @foreach($peliculas as $pelicula)
-                    <div class="col-md-3">
-                        <a href="{{ route('peliculas.show', $pelicula->id) }}" class="text-decoration-none">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    @if($pelicula->imagen != Pelicula::$IMAGEN_DEFAULT)
-                                        <img alt="Imagen de {{ $pelicula->titulo }}" class="img-fluid"
-                                             src="{{ asset('storage/' . $pelicula->imagen) }}"
-                                             width="380px" height="220px">
-                                    @else
-                                        <img alt="Imagen por defecto" class="img-fluid"
-                                             src="{{Pelicula::$IMAGEN_DEFAULT}}">
-                                    @endif
-                                    <h6 class="card-title">{{ $pelicula->titulo }}</h6>
+                <div class="d-flex flex-wrap justify-content-center mt-4">
+                    @foreach($peliculas as $pelicula)
+                        <a href="{{ route('peliculas.show', ['id' => $pelicula->id, 'referer' => url()->current()]) }}" class="text-decoration-none">
+                            <div class="pelicula-card">
+                                <img
+                                    src="{{ $pelicula->imagen != Pelicula::$IMAGEN_DEFAULT ? asset('storage/' . $pelicula->imagen) : Pelicula::$IMAGEN_DEFAULT }}"
+                                    alt="Imagen de {{ $pelicula->titulo }}">
+
+
+                                <div class="hover-content">
+                                    <div class="nota-media">{{ number_format($pelicula->promedio_calificacion, 1) }}</div>
+                                    <div class="rating">
+
+                                        @for($i = 5; $i >= 1; $i--)
+                                            @if($i <= floor($pelicula->promedio_calificacion))
+                                                <span>&#9733;</span>
+                                            @elseif($i == ceil($pelicula->promedio_calificacion))
+                                                <span>&#9734;</span>
+                                            @else
+                                                <span class="empty">&#9733;</span>
+                                            @endif
+                                        @endfor
+                                    </div>
                                 </div>
                             </div>
                         </a>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             @else
-                <p>No se han encontrado películas dirigidas por <strong>{{ $director->nombre }}</strong>.</p>
+                <p class="lead"><em>No se ha encontrado ninguna película registrada.</em></p>
             @endif
         </div>
         <div class="pagination-container">
@@ -96,16 +105,11 @@
         </div>
     </div>
 
-
-    <a class="btn btn-success mb-4" href="{{route('directores.edit', $director->id)}}">Actualizar Director</a>
-    <a class="btn btn-secondary mb-4 mx-2" href="{{ route('directores.index') }}">Volver</a>
-    <form action="{{ route('directores.destroy', $director->id) }}" method="POST" style="display: inline;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger mb-4"
-                onclick="return confirm('¿Estás seguro de que deseas borrar este director?')">Borrar
-        </button>
-    </form>
+    @if(auth()->check() && auth()->user()->role === 'ADMIN')
+        <a class="btn btn-secondary mb-4 mx-2" href="{{ url()->previous() }}">Volver</a>
+    @else
+        <a class="btn btn-secondary mb-4 mx-2" href="{{ $referer }}">Volver</a>
+    @endif
 
 @endsection
 @include('footer')

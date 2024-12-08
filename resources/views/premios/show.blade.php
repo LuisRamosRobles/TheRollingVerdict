@@ -7,17 +7,6 @@
 
 @section('content')
 
-    @if(session('success'))
-        <br>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <br>
-    @endif
-
     <div class="premio-detalle">
         <div class="info">
             <h1>{{ $premio->nombre }}</h1>
@@ -45,15 +34,13 @@
         </div>
     </div>
 
-    <a class="btn btn-success mb-4" href="{{route('premios.edit', $premio->id)}}">Actualizar Premio</a>
-    <a class="btn btn-secondary mx-2 mb-4" href="{{ route('premios.index') }}">Volver</a>
-    <form action="{{ route('premios.destroy', $premio->id) }}" method="POST" style="display: inline;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger mb-4"
-                onclick="return confirm('¿Estás seguro de que deseas borrar este premio?')">Borrar
-        </button>
-    </form>
+
+    @if(auth()->check() && auth()->user()->role === 'ADMIN')
+        <a class="btn btn-secondary mb-4 mx-2" href="{{ url()->previous() }}">Volver</a>
+    @else
+        <a class="btn btn-secondary mb-4 mx-2" href="{{ route('premios.index') }}">Volver</a>
+    @endif
+
 
 @endsection
 @include('footer')

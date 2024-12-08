@@ -6,30 +6,33 @@
 @section('title', 'Directorio de Actores')
 
 @section('content')
-    <div class="actores">
+    <div class="actores text-center">
         <h1>Directorio de Actores</h1>
 
+
+        <form action="{{ route('actores.index') }}" class="search-form" method="get">
+            @csrf
+            <div class="input-group">
+                <input type="text" class="form-control search-input" id="search" name="search" placeholder="Nombre del Actor">
+                <div class="input-group-append">
+                    <button class="btn search-button" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+
         @if(count($actores) > 0)
-            <div class="row">
+            <div class="d-flex flex-wrap justify-content-center mt-4">
                 @foreach($actores as $actor)
-                    <div class="col-md-3">
-                        <a href="{{ route('actores.show', $actor->id) }}" class="text-decoration-none">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    @if($actor->imagen!= Actor::$IMAGEN_DEFAULT)
-                                        <img alt="Imagen del Actor" class="img-fluid"
-                                             src="{{ asset('storage/'. $actor->imagen) }}"
-                                             width="230px" height="340px">
-                                    @else
-                                        <img alt="Imagen por defecto" class="img-fluid"
-                                             src="{{ Actor::$IMAGEN_DEFAULT }}"
-                                             width="230px" height="340px">
-                                    @endif
-                                    <h6 class="card-title mt-2">{{$actor->nombre}}</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
+                    <a href="{{ route('actores.show', $actor->id) }}" class="text-decoration-none">
+                        <div class="actor-card">
+                            <img
+                                src="{{ $actor->imagen != Actor::$IMAGEN_DEFAULT ? asset('storage/' . $actor->imagen) : Actor::$IMAGEN_DEFAULT }}"
+                                alt="Imagen de {{ $actor->nombre }}">
+                            <h6>{{ $actor->nombre }}</h6>
+                        </div>
+                    </a>
                 @endforeach
             </div>
         @else
@@ -37,12 +40,10 @@
         @endif
 
         <div class="pagination-container">
-            {{$actores->links('pagination::bootstrap-4')}}
+            {{ $actores->links('pagination::bootstrap-4') }}
         </div>
-
-        <a class="btn btn-success mb-3" href="{{ route('actores.create') }}">Añadir Actor</a>
-        <a class="btn btn-info mb-3" href="{{ route('actores.deleted')}}">Actores Eliminados</a>
     </div>
 
 @endsection
+
 @include('footer')

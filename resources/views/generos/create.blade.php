@@ -34,7 +34,7 @@
         </div>
 
         <button class="btn btn-primary" type="submit">Crear</button>
-        <a class="btn btn-secondary mx-2" href="{{ route('generos.index') }}">Volver</a>
+        <a class="btn btn-secondary mx-2" href="{{ route('admin.generos') }}">Volver</a>
     </form>
 
 @endsection

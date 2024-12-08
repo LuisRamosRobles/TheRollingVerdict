@@ -79,45 +79,6 @@
                        value="{{ $director->fin_actividad }}">
             </div>
 
-            <div class="form-group">
-                <h3>Premios</h3>
-                <input type="hidden" id="premios-eliminar" name="premios_eliminar" value="">
-                <button class="btn btn-primary mb-3" type="button" onclick="agregarPremio()">Agregar Premio</button>
-                <div id="premios-container">
-                    @foreach($director->premios as $index => $premio)
-                        <div class="premio-item" data-id="{{ $premio->id }}">
-                            <input type="hidden" name="premios[{{ $index }}][id]" value="{{ $premio->id }}">
-
-                            <div class="form-group">
-                                <label for="premio-nombre-{{ $index }}">Nombre del Premio:</label>
-                                <input type="text" name="premios[{{ $index }}][nombre]" id="premio-nombre-{{ $index }}" class="form-control" value="{{ $premio->nombre }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="premio-categoria-{{ $index }}">Categoría:</label>
-                                <input type="text" name="premios[{{ $index }}][categoria]" id="premio-categoria-{{ $index }}" class="form-control" value="{{ $premio->categoria }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="premio-anio-{{ $index }}">Año:</label>
-                                <input type="number" name="premios[{{ $index }}][anio]" id="premio-anio-{{ $index }}" class="form-control" value="{{ $premio->anio }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="premio-pelicula-{{ $index }}">Película:</label>
-                                <select name="premios[{{ $index }}][pelicula_id]" id="premio-pelicula-{{ $index }}" class="form-control">
-                                    <option value="">Selecciona una película</option>
-                                    @foreach($peliculas as $pelicula)
-                                        <option value="{{ $pelicula->id }}" {{ $premio->pelicula_id == $pelicula->id ? 'selected' : '' }}>
-                                            {{ $pelicula->titulo }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="button" class="btn btn-danger mt-2 mb-4" onclick="eliminarPremio(this, {{ $premio->id }})">Eliminar</button>
-
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
             <div class="form-group imagen">
                 <label for="imagen">Imagen:</label>
                 @if($director->imagen != Director::$IMAGEN_DEFAULT)
@@ -133,76 +94,11 @@
             </div>
 
             <button class="btn btn-primary" type="submit">Actualizar</button>
-            <a class="btn btn-secondary mx-2" href="{{ route('directores.show', $director->id) }}">Volver</a>
+            <a class="btn btn-secondary mx-2" href="{{ route('admin.directores') }}">Volver</a>
         </form>
     </div>
 
     <script>
-        let premioCount = {{ count($director->premios) }};
-        function agregarPremio() {
-            const container = document.getElementById('premios-container');
-            const template = `
-                <div class="premio-item">
-                    <div class="form-group">
-                        <label for="premio-nombre-${premioCount}">Nombre del Premio:</label>
-                        <input type="text" name="premios[${premioCount}][nombre]" id="premio-nombre-${premioCount}" class="form-control" placeholder="Ejemplo: Oscar" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="premio-categoria-${premioCount}">Categoría:</label>
-                        <input type="text" name="premios[${premioCount}][categoria]" id="premio-categoria-${premioCount}" class="form-control" placeholder="Ejemplo: Mejor Director" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="premio-anio-${premioCount}">Año:</label>
-                        <input type="number" name="premios[${premioCount}][anio]" id="premio-anio-${premioCount}" class="form-control" placeholder="Ejemplo: 2022" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="premio-pelicula-${premioCount}">Película:</label>
-                        <select name="premios[${premioCount}][pelicula_id]" id="premio-pelicula-${premioCount}" class="form-control">
-                                <option value="">Selecciona una película</option>
-                            @foreach($peliculas as $pelicula)
-                                <option value="{{ $pelicula->id }}">{{ $pelicula->titulo }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-danger mb-4" onclick="eliminarPremio(this)">Eliminar</button>
-                </div>`;
-            container.insertAdjacentHTML('beforeend', template);
-            premioCount++;
-        }
-
-        function eliminarPremio(button, premioId = null) {
-            if (confirm('¿Estás seguro de que deseas eliminar este premio?')) {
-
-                const premiosEliminar = document.getElementById('premios-eliminar');
-
-                if (premioId) {
-                    const premiosAEliminar = premiosEliminar.value ? premiosEliminar.value.split(',') : [];
-                    premiosAEliminar.push(premioId);
-                    premiosEliminar.value = premiosAEliminar.join(',');
-                }
-
-                button.closest('.premio-item').remove();
-
-            }
-        }
-
-        const directorShowUrl = "{{ route('directores.show', $director->id) }}";
-
-        document.getElementById('form-actualizar-director').addEventListener('submit', function (event) {
-            const premiosEliminar = document.getElementById('premios-eliminar').value;
-
-            if (premiosEliminar) {
-                const confirmacion = confirm('Tienes premios marcados para eliminar. ¿Estás seguro de que deseas continuar?');
-
-                if (!confirmacion) {
-                    // Si el usuario cancela, detenemos el envío del formulario
-                    event.preventDefault();
-
-                    window.location.href = directorShowUrl
-                }
-            }
-        });
-
         document.addEventListener('DOMContentLoaded', function () {
             const activoSiRadio = document.getElementById('activo_si');
             const activoNoRadio = document.getElementById('activo_no');
@@ -210,7 +106,7 @@
             const finActividadInput = document.getElementById('fin_actividad');
 
 
-            // Función para actualizar la visibilidad del campo
+
             function actualizarVisibilidadFinActividad() {
                 if (activoNoRadio.checked) {
                     finActividadDiv.style.display = 'block';
@@ -220,10 +116,10 @@
                 }
             }
 
-            // Establecer el estado inicial
+
             actualizarVisibilidadFinActividad();
 
-            // Actualizar la visibilidad al cambiar el estado de los radio buttons
+
             activoSiRadio.addEventListener('change', actualizarVisibilidadFinActividad);
             activoNoRadio.addEventListener('change', actualizarVisibilidadFinActividad);
         });
