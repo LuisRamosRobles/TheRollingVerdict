@@ -127,7 +127,7 @@ Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
-    // Rutas para las secciones del dashboard
+
     Route::get('/admin/peliculas', [AdminDashboardController::class, 'peliculas'])->name('admin.peliculas');
     Route::get('/admin/generos', [AdminDashboardController::class, 'generos'])->name('admin.generos');
     Route::get('/admin/directores', [AdminDashboardController::class, 'directores'])->name('admin.directores');
