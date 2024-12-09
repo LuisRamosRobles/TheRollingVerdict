@@ -1,0 +1,3395 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "TheRollingVerdict",
+        "description": "Documentación de la API para el TFG",
+        "contact": {
+            "email": "lrrzafiro6@gmail.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://swagger.local",
+            "description": "Servidor local"
+        }
+    ],
+    "paths": {
+        "/actores": {
+            "get": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Obtener una lista de actores",
+                "description": "Devuelve una lista paginada de actores ordenados alfabéticamente, con opción de búsqueda por nombre.",
+                "operationId": "getActores",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cadena de texto para buscar actores por nombre.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de actores obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            }
+        },
+        "/actores/{id}": {
+            "get": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Obtener detalles de un actor",
+                "description": "Devuelve la información completa de un actor específico, junto con una lista paginada de películas y premios asociados.",
+                "operationId": "getActor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del actor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación de películas asociadas.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del actor obtenidos con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "description": "ID único del actor",
+                                            "type": "integer"
+                                        },
+                                        "nombre": {
+                                            "description": "Nombre del actor",
+                                            "type": "string"
+                                        },
+                                        "peliculas": {
+                                            "description": "Lista de películas asociadas",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "premios": {
+                                            "description": "Lista de premios asociados",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Premio"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Actor no encontrado"
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Eliminar un actor",
+                "description": "Elimina un actor específico de forma lógica (soft delete). Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "deleteActor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del actor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Actor eliminado correctamente"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Actor no encontrado"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Actualizar un actor existente",
+                "description": "Actualiza los datos de un actor existente, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "updateActor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del actor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del actor",
+                                        "type": "string",
+                                        "example": "Morgan Freeman"
+                                    },
+                                    "fecha_nac": {
+                                        "description": "Fecha de nacimiento del actor (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1937-06-01"
+                                    },
+                                    "lugar_nac": {
+                                        "description": "Lugar de nacimiento del actor",
+                                        "type": "string",
+                                        "example": "Memphis"
+                                    },
+                                    "biografia": {
+                                        "description": "Breve biografía del actor",
+                                        "type": "string",
+                                        "example": "Actor conocido por películas como Shawshank Redemption."
+                                    },
+                                    "inicio_actividad": {
+                                        "description": "Año de inicio de actividad del actor",
+                                        "type": "integer",
+                                        "example": 1955
+                                    },
+                                    "fin_actividad": {
+                                        "description": "Año de fin de actividad del actor",
+                                        "type": "integer",
+                                        "example": 2023
+                                    },
+                                    "activo": {
+                                        "description": "Estado del actor (activo o inactivo)",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen del actor (opcional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Actor actualizado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Actor"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Actor no encontrado"
+                    }
+                }
+            }
+        },
+        "/actores/create": {
+            "get": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Mostrar formulario para crear un actor",
+                "description": "Devuelve el formulario necesario para crear un nuevo actor. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "createActor",
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "actor": {
+                                            "$ref": "#/components/schemas/Actor"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/actores/store": {
+            "post": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Crear un nuevo actor",
+                "description": "Crea un nuevo actor y guarda los datos enviados, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "storeActor",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del actor",
+                                        "type": "string",
+                                        "example": "Leonardo DiCaprio"
+                                    },
+                                    "fecha_nac": {
+                                        "description": "Fecha de nacimiento del actor (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1974-11-11"
+                                    },
+                                    "lugar_nac": {
+                                        "description": "Lugar de nacimiento del actor",
+                                        "type": "string",
+                                        "example": "Los Ángeles"
+                                    },
+                                    "biografia": {
+                                        "description": "Breve biografía del actor",
+                                        "type": "string",
+                                        "example": "Actor ganador de un Óscar por The Revenant."
+                                    },
+                                    "inicio_actividad": {
+                                        "description": "Año de inicio de actividad del actor",
+                                        "type": "integer",
+                                        "example": 1990
+                                    },
+                                    "fin_actividad": {
+                                        "description": "Año de fin de actividad del actor",
+                                        "type": "integer",
+                                        "example": 2023
+                                    },
+                                    "activo": {
+                                        "description": "Estado del actor (activo o inactivo)",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen del actor (opcional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Actor creado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Actor"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/actores/{id}/edit": {
+            "get": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Mostrar formulario para editar un actor",
+                "description": "Devuelve el formulario necesario para editar un actor existente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "editActor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del actor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "actor": {
+                                            "$ref": "#/components/schemas/Actor"
+                                        },
+                                        "peliculas": {
+                                            "description": "Lista de películas disponibles para asociación",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Actor no encontrado"
+                    }
+                }
+            }
+        },
+        "/actores/eliminados": {
+            "get": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Listar actores eliminados",
+                "description": "Obtiene una lista paginada de actores que han sido eliminados lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "getDeletedActores",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de actores eliminados obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/actores/{id}/restaurar": {
+            "patch": {
+                "tags": [
+                    "Actores"
+                ],
+                "summary": "Restaurar un actor eliminado",
+                "description": "Restaura un actor específico que fue eliminado lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "restoreActor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del actor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Actor restaurado con éxito"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Actor no encontrado"
+                    }
+                }
+            }
+        },
+        "/admin/dashboard": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Mostrar el panel de control del administrador",
+                "description": "Devuelve la vista principal del panel de control del administrador.",
+                "operationId": "getAdminDashboard",
+                "responses": {
+                    "200": {
+                        "description": "Vista del panel de administrador cargada con éxito"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    }
+                }
+            }
+        },
+        "/admin/peliculas": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar todas las películas",
+                "description": "Devuelve una lista de todas las películas.",
+                "operationId": "getAdminPeliculas",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Texto para buscar películas por título.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de películas obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Pelicula"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "Acción no autorizada"
+                    }
+                }
+            }
+        },
+        "/admin/generos": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar todos los géneros",
+                "description": "Devuelve una lista de todos los géneros.",
+                "operationId": "getAdminGeneros",
+                "responses": {
+                    "200": {
+                        "description": "Lista de géneros obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Genero"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/directores": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar todos los directores",
+                "description": "Devuelve una lista de todos los directores.",
+                "operationId": "getAdminDirectores",
+                "responses": {
+                    "200": {
+                        "description": "Lista de directores obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Director"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/actores": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar todos los actores",
+                "description": "Devuelve una lista de todos los actores.",
+                "operationId": "getAdminActores",
+                "responses": {
+                    "200": {
+                        "description": "Lista de actores obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Actor"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/premios": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar todos los premios",
+                "description": "Devuelve una lista de todos los premios.",
+                "operationId": "getAdminPremios",
+                "responses": {
+                    "200": {
+                        "description": "Lista de premios obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Premio"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/resenas": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar películas con reseñas",
+                "description": "Devuelve una lista de películas que tienen reseñas, incluyendo el conteo de reseñas, desde el panel de administración.",
+                "operationId": "getAdminPeliculasConResenas",
+                "responses": {
+                    "200": {
+                        "description": "Lista de películas con reseñas obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID de la película",
+                                                "type": "integer"
+                                            },
+                                            "titulo": {
+                                                "description": "Título de la película",
+                                                "type": "string"
+                                            },
+                                            "resenas_count": {
+                                                "description": "Cantidad de reseñas asociadas a la película",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "403": {
+                        "description": "Acción no autorizada (Solo accesible para administradores)"
+                    }
+                }
+            }
+        },
+        "/resenas/{resenaId}": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Listar reseñas por película",
+                "description": "Devuelve una lista de reseñas de una película específica.",
+                "operationId": "getResenasPorPelicula",
+                "parameters": [
+                    {
+                        "name": "peliculaId",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de reseñas obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Resena"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/directores": {
+            "get": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Obtener una lista de directores",
+                "description": "Devuelve una lista paginada de directores ordenados alfabéticamente, con opción de búsqueda por nombre.",
+                "operationId": "getDirectores",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cadena de texto para buscar directores por nombre.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de directores obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Director"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            }
+        },
+        "/directores/{id}": {
+            "get": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Obtener detalles de un director",
+                "description": "Devuelve la información completa de un director específico, junto con una lista paginada de películas y premios asociados.",
+                "operationId": "getDirector",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del director",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación de películas asociadas.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del director obtenidos con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "description": "ID único del director",
+                                            "type": "integer"
+                                        },
+                                        "nombre": {
+                                            "description": "Nombre del director",
+                                            "type": "string"
+                                        },
+                                        "peliculas": {
+                                            "description": "Lista de películas asociadas",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "premios": {
+                                            "description": "Lista de premios asociados",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Premio"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Director no encontrado"
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Eliminar un director",
+                "description": "Elimina un director específico de forma lógica (soft delete). Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "deleteDirector",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del director",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Director eliminado correctamente"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Director no encontrado"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Actualizar un director existente",
+                "description": "Actualiza los datos de un director existente, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "updateDirector",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del director",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del director",
+                                        "type": "string",
+                                        "example": "Steven Spielberg"
+                                    },
+                                    "fecha_nac": {
+                                        "description": "Fecha de nacimiento del director (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1946-12-18"
+                                    },
+                                    "lugar_nac": {
+                                        "description": "Lugar de nacimiento del director",
+                                        "type": "string",
+                                        "example": "Cincinnati"
+                                    },
+                                    "biografia": {
+                                        "description": "Breve biografía del director",
+                                        "type": "string",
+                                        "example": "Director conocido por películas como Jurassic Park."
+                                    },
+                                    "inicio_actividad": {
+                                        "description": "Año de inicio de actividad del director",
+                                        "type": "integer",
+                                        "example": 1971
+                                    },
+                                    "fin_actividad": {
+                                        "description": "Año de fin de actividad del director",
+                                        "type": "integer",
+                                        "example": 2023
+                                    },
+                                    "activo": {
+                                        "description": "Estado del director (activo o inactivo)",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen del director (opcional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Director actualizado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Director"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Director no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/directores/create": {
+            "get": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Mostrar formulario para crear un director",
+                "description": "Devuelve el formulario necesario para crear un nuevo director. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "createDirector",
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "director": {
+                                            "$ref": "#/components/schemas/Director"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/directores/store": {
+            "post": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Crear un nuevo director",
+                "description": "Crea un nuevo director y guarda los datos enviados, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "storeDirector",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del director",
+                                        "type": "string",
+                                        "example": "Christopher Nolan"
+                                    },
+                                    "fecha_nac": {
+                                        "description": "Fecha de nacimiento del director (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1970-07-30"
+                                    },
+                                    "lugar_nac": {
+                                        "description": "Lugar de nacimiento del director",
+                                        "type": "string",
+                                        "example": "Londres"
+                                    },
+                                    "biografia": {
+                                        "description": "Breve biografía del director",
+                                        "type": "string",
+                                        "example": "Director conocido por películas como Inception."
+                                    },
+                                    "inicio_actividad": {
+                                        "description": "Año de inicio de actividad del director",
+                                        "type": "integer",
+                                        "example": 1995
+                                    },
+                                    "fin_actividad": {
+                                        "description": "Año de fin de actividad del director",
+                                        "type": "integer",
+                                        "example": 2023
+                                    },
+                                    "activo": {
+                                        "description": "Estado del director (activo o inactivo)",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen del director (opcional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Director creado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Director"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/directores/{id}/edit": {
+            "get": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Mostrar formulario para editar un director",
+                "description": "Devuelve el formulario necesario para editar un director existente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "editDirector",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del director",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "director": {
+                                            "$ref": "#/components/schemas/Director"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Director no encontrado"
+                    }
+                }
+            }
+        },
+        "/directores/eliminados": {
+            "get": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Listar directores eliminados",
+                "description": "Obtiene una lista paginada de directores que han sido eliminados lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "getDeletedDirectores",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de directores eliminados obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Director"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/directores/{id}/restaurar": {
+            "patch": {
+                "tags": [
+                    "Directores"
+                ],
+                "summary": "Restaurar un director eliminado",
+                "description": "Restaura un director específico que fue eliminado lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "restoreDirector",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del director",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Director restaurado correctamente"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Director no encontrado"
+                    }
+                }
+            }
+        },
+        "/generos": {
+            "get": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Obtener una lista de géneros",
+                "description": "Devuelve una lista paginada de géneros ordenados alfabéticamente, con opción de búsqueda.",
+                "operationId": "getGeneros",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cadena de texto para buscar géneros por nombre.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de géneros obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Genero"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            }
+        },
+        "/generos/{id}": {
+            "get": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Obtener detalles de un género",
+                "description": "Devuelve la información completa de un género específico junto con una lista paginada de películas asociadas.",
+                "operationId": "getGenero",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del género",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación de películas asociadas.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del género obtenidos con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "description": "ID único del género",
+                                            "type": "integer"
+                                        },
+                                        "nombre": {
+                                            "description": "Nombre del género",
+                                            "type": "string"
+                                        },
+                                        "peliculas": {
+                                            "description": "Lista de películas asociadas",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Género no encontrado"
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Eliminar un género",
+                "description": "Elimina un género específico de forma lógica (soft delete). Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "deleteGenero",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del género",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Género eliminado con éxito"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Género no encontrado"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Actualizar un género existente",
+                "description": "Actualiza los datos de un género existente, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "updateGenero",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del género",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del género",
+                                        "type": "string",
+                                        "example": "Acción"
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen opcional del género",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Género actualizado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Genero"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Género no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/generos/create": {
+            "get": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Mostrar formulario para crear un género",
+                "description": "Devuelve el formulario necesario para crear un nuevo género. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "getGeneroCreate",
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "genero": {
+                                            "$ref": "#/components/schemas/Genero"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/generos/store": {
+            "post": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Crear un nuevo género",
+                "description": "Crea un nuevo género y guarda los datos enviados, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "createGenero",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del género",
+                                        "type": "string",
+                                        "example": "Comedia"
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen opcional del género",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Género creado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Genero"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/generos/{id}/edit": {
+            "get": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Mostrar formulario para editar un género",
+                "description": "Devuelve el formulario necesario para editar un género existente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "editGenero",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del género",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "genero": {
+                                            "$ref": "#/components/schemas/Genero"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Género no encontrado"
+                    }
+                }
+            }
+        },
+        "/generos/eliminados": {
+            "get": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Listar géneros eliminados",
+                "description": "Obtiene una lista paginada de géneros que han sido eliminados lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "getDeletedGeneros",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de géneros eliminados obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Genero"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/generos/{id}/restaurar": {
+            "patch": {
+                "tags": [
+                    "Generos"
+                ],
+                "summary": "Restaurar un género eliminado",
+                "description": "Restaura un género específico que fue eliminado lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "restoreGenero",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del género",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Género restaurado con éxito"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Género no encontrado"
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "tags": [
+                    "Inicio"
+                ],
+                "summary": "Obtener las películas mejor calificadas",
+                "description": "Devuelve una lista de las 4 películas con mejor promedio de calificación junto con la información del usuario autenticado.",
+                "operationId": "getInicio",
+                "responses": {
+                    "200": {
+                        "description": "Página principal cargada con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "peliculas": {
+                                            "description": "Las 4 películas con mejor calificación",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "usuario": {
+                                            "description": "Información del usuario autenticado",
+                                            "properties": {
+                                                "id": {
+                                                    "description": "ID del usuario",
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "description": "Nombre del usuario",
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "description": "Correo electrónico del usuario",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                }
+            }
+        },
+        "/peliculas": {
+            "get": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Obtener una lista de películas",
+                "description": "Devuelve una lista paginada de películas ordenadas por fecha de estreno, con opción de búsqueda.",
+                "operationId": "getPeliculas",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cadena de texto para buscar películas por título o descripción.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de películas obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            }
+        },
+        "/peliculas/{id}": {
+            "get": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Obtener detalles de una película",
+                "description": "Devuelve la información completa de una película específica junto con sus géneros, director, premios y actores.",
+                "operationId": "getPelicula",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "referer",
+                        "in": "query",
+                        "description": "URL de referencia opcional para redirigir después de la vista",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "url"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles de la película obtenidos con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "description": "ID único de la película",
+                                            "type": "integer"
+                                        },
+                                        "titulo": {
+                                            "description": "Título de la película",
+                                            "type": "string"
+                                        },
+                                        "descripcion": {
+                                            "description": "Descripción de la película",
+                                            "type": "string"
+                                        },
+                                        "estreno": {
+                                            "description": "Fecha de estreno",
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "generos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Genero"
+                                            }
+                                        },
+                                        "director": {
+                                            "$ref": "#/components/schemas/Director"
+                                        },
+                                        "premios": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Premio"
+                                            }
+                                        },
+                                        "actores": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Película no encontrada"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Actualizar una película existente",
+                "description": "Actualiza los detalles de una película, incluyendo géneros, reparto, y otros datos. Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "updatePelicula",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titulo",
+                                    "generos",
+                                    "estreno",
+                                    "director_id",
+                                    "sinopsis",
+                                    "reparto"
+                                ],
+                                "properties": {
+                                    "titulo": {
+                                        "description": "Título de la película",
+                                        "type": "string",
+                                        "example": "The Dark Knight"
+                                    },
+                                    "generos": {
+                                        "description": "IDs de géneros asociados",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "estreno": {
+                                        "description": "Fecha de estreno (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2008-07-18"
+                                    },
+                                    "director_id": {
+                                        "description": "ID del director",
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "sinopsis": {
+                                        "description": "Sinopsis de la película",
+                                        "type": "string",
+                                        "example": "Un caballero oscuro protege Gotham de un caótico villano conocido como el Joker."
+                                    },
+                                    "reparto": {
+                                        "description": "IDs de actores asociados",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen de la película (opcional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Película actualizada con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Pelicula"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Película no encontrada"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Eliminar una película",
+                "description": "Elimina una película específica de forma lógica (soft delete). Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "deletePelicula",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Película eliminada con éxito"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Película no encontrada"
+                    }
+                }
+            }
+        },
+        "/peliculas/create": {
+            "get": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Mostrar formulario para crear una nueva película",
+                "description": "Devuelve las opciones necesarias (géneros, directores y actores activos) para crear una nueva película. Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "getPeliculaCreate",
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "generos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Genero"
+                                            }
+                                        },
+                                        "directores": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Director"
+                                            }
+                                        },
+                                        "actores": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/peliculas/store": {
+            "post": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Crear una nueva película",
+                "description": "Permite crear un registro de película junto con sus géneros, reparto, y otros detalles. Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "createPelicula",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titulo",
+                                    "generos",
+                                    "estreno",
+                                    "director_id",
+                                    "sinopsis"
+                                ],
+                                "properties": {
+                                    "titulo": {
+                                        "description": "Título de la película",
+                                        "type": "string",
+                                        "example": "Inception"
+                                    },
+                                    "generos": {
+                                        "description": "IDs de géneros asociados",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "estreno": {
+                                        "description": "Fecha de estreno (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-01"
+                                    },
+                                    "director_id": {
+                                        "description": "ID del director",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "sinopsis": {
+                                        "description": "Sinopsis de la película",
+                                        "type": "string",
+                                        "example": "Un ladrón que roba secretos corporativos usando tecnología de sueños..."
+                                    },
+                                    "reparto": {
+                                        "description": "IDs de actores asociados",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 3
+                                        }
+                                    },
+                                    "imagen": {
+                                        "description": "Archivo de imagen de la película (opcional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Película creada con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Pelicula"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/peliculas/{id}/edit": {
+            "get": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Obtener los datos necesarios para editar una película",
+                "description": "Devuelve la información de una película específica junto con sus géneros, director, reparto seleccionado y actores disponibles para editar. Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "editPelicula",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos de la película obtenidos con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "pelicula": {
+                                            "$ref": "#/components/schemas/Pelicula"
+                                        },
+                                        "generos": {
+                                            "description": "Lista de géneros disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Genero"
+                                            }
+                                        },
+                                        "directores": {
+                                            "description": "Lista de directores activos disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Director"
+                                            }
+                                        },
+                                        "repartoSeleccionado": {
+                                            "description": "Lista de actores seleccionados para la película",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        },
+                                        "actoresDisponibles": {
+                                            "description": "Lista de actores disponibles para agregar al reparto",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Película no encontrada"
+                    }
+                }
+            }
+        },
+        "/peliculas/eliminados": {
+            "get": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Listar películas eliminadas",
+                "description": "Obtiene una lista paginada de películas que han sido eliminadas lógicamente. Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "getDeletedPeliculas",
+                "responses": {
+                    "200": {
+                        "description": "Lista de películas eliminadas obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/peliculas/{id}/restaurar": {
+            "patch": {
+                "tags": [
+                    "Peliculas"
+                ],
+                "summary": "Restaurar una película eliminada",
+                "description": "Restaura una película específica que fue eliminada lógicamente. Solo accesible para usuarios con rol ADMIN.",
+                "operationId": "restorePelicula",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Película restaurada con éxito"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Película no encontrada"
+                    }
+                }
+            }
+        },
+        "/premios": {
+            "get": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Obtener una lista de premios",
+                "description": "Devuelve una lista paginada de premios ordenados por año (descendente) y nombre (ascendente), con opción de búsqueda por nombre.",
+                "operationId": "getPremios",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cadena de texto para buscar premios por nombre.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de premios obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Premio"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            }
+        },
+        "/premios/{id}": {
+            "get": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Obtener detalles de un premio",
+                "description": "Devuelve la información completa de un premio específico.",
+                "operationId": "getPremio",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del premio",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del premio obtenidos con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "description": "ID único del premio",
+                                            "type": "integer"
+                                        },
+                                        "nombre": {
+                                            "description": "Nombre del premio",
+                                            "type": "string"
+                                        },
+                                        "anio": {
+                                            "description": "Año en que se otorgó el premio",
+                                            "type": "integer"
+                                        },
+                                        "categoria": {
+                                            "description": "Categoría del premio",
+                                            "type": "string"
+                                        },
+                                        "entidad": {
+                                            "description": "Entidad o persona que recibió el premio",
+                                            "type": "string"
+                                        },
+                                        "descripcion": {
+                                            "description": "Descripción adicional del premio",
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Premio no encontrado"
+                    },
+                    "500": {
+                        "description": "Error en el servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Eliminar un premio",
+                "description": "Elimina un premio específico de forma lógica (soft delete). Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "deletePremio",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del premio",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Premio eliminado correctamente"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Premio no encontrado"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Actualizar un premio existente",
+                "description": "Actualiza los datos de un premio existente y los asocia a una película, director o actor. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "updatePremio",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del premio",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "categoria",
+                                    "anio",
+                                    "entidad_type",
+                                    "entidad_id"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del premio",
+                                        "type": "string",
+                                        "example": "Óscar"
+                                    },
+                                    "categoria": {
+                                        "description": "Categoría del premio",
+                                        "type": "string",
+                                        "example": "Mejor Película"
+                                    },
+                                    "anio": {
+                                        "description": "Año del premio",
+                                        "type": "integer",
+                                        "example": 2023
+                                    },
+                                    "entidad_type": {
+                                        "description": "Tipo de entidad asociada al premio",
+                                        "type": "string",
+                                        "example": "App\\Models\\Pelicula"
+                                    },
+                                    "entidad_id": {
+                                        "description": "ID de la entidad asociada al premio",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "pelicula_id": {
+                                        "description": "ID de la película asociada al premio (opcional)",
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Premio actualizado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Premio"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Premio no encontrado"
+                    }
+                }
+            }
+        },
+        "/premios/create": {
+            "get": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Mostrar formulario para crear un premio",
+                "description": "Devuelve el formulario necesario para crear un nuevo premio. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "createPremio",
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "premio": {
+                                            "$ref": "#/components/schemas/Premio"
+                                        },
+                                        "peliculas": {
+                                            "description": "Lista de películas disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "directores": {
+                                            "description": "Lista de directores disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Director"
+                                            }
+                                        },
+                                        "actores": {
+                                            "description": "Lista de actores disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/premios/store": {
+            "post": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Crear un nuevo premio",
+                "description": "Crea un nuevo premio y lo asocia a una película, director o actor. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "storePremio",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "categoria",
+                                    "anio",
+                                    "entidad_type",
+                                    "entidad_id"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "description": "Nombre del premio",
+                                        "type": "string",
+                                        "example": "Óscar"
+                                    },
+                                    "categoria": {
+                                        "description": "Categoría del premio",
+                                        "type": "string",
+                                        "example": "Mejor Película"
+                                    },
+                                    "anio": {
+                                        "description": "Año del premio",
+                                        "type": "integer",
+                                        "example": 2023
+                                    },
+                                    "entidad_type": {
+                                        "description": "Tipo de entidad asociada al premio",
+                                        "type": "string",
+                                        "example": "App\\Models\\Pelicula"
+                                    },
+                                    "entidad_id": {
+                                        "description": "ID de la entidad asociada al premio",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "pelicula_id": {
+                                        "description": "ID de la película asociada al premio (opcional)",
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Premio creado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Premio"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/premios/{id}/edit": {
+            "get": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Mostrar formulario para editar un premio",
+                "description": "Devuelve el formulario necesario para editar un premio existente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "editPremio",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del premio",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Formulario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "premio": {
+                                            "$ref": "#/components/schemas/Premio"
+                                        },
+                                        "peliculas": {
+                                            "description": "Lista de películas disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Pelicula"
+                                            }
+                                        },
+                                        "directores": {
+                                            "description": "Lista de directores disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Director"
+                                            }
+                                        },
+                                        "actores": {
+                                            "description": "Lista de actores disponibles",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Actor"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Premio no encontrado"
+                    }
+                }
+            }
+        },
+        "/premios/eliminados": {
+            "get": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Listar premios eliminados",
+                "description": "Obtiene una lista paginada de premios que han sido eliminados lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "getDeletedPremios",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de la página para la paginación.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de premios eliminados obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "description": "Página actual.",
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Premio"
+                                            }
+                                        },
+                                        "total": {
+                                            "description": "Número total de elementos.",
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "description": "Última página disponible.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    }
+                }
+            }
+        },
+        "/premios/{id}/restaurar": {
+            "patch": {
+                "tags": [
+                    "Premios"
+                ],
+                "summary": "Restaurar un premio eliminado",
+                "description": "Restaura un premio específico que fue eliminado lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+                "operationId": "restorePremio",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único del premio",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Premio restaurado con éxito"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (Usuario no autorizado para realizar esta acción)"
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "404": {
+                        "description": "Premio no encontrado"
+                    }
+                }
+            }
+        },
+        "/peliculas/{peliculaId}/resenas}": {
+            "get": {
+                "tags": [
+                    "Reseñas"
+                ],
+                "summary": "Listar reseñas de una película",
+                "description": "Devuelve una lista de reseñas asociadas a una película específica.",
+                "operationId": "getResenas",
+                "parameters": [
+                    {
+                        "name": "peliculaId",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de reseñas obtenida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "pelicula": {
+                                            "$ref": "#/components/schemas/Pelicula"
+                                        },
+                                        "resenas": {
+                                            "description": "Lista de reseñas",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Resena"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Película no encontrada"
+                    }
+                }
+            }
+        },
+        "/peliculas/{peliculaId}/resenas": {
+            "post": {
+                "tags": [
+                    "Reseñas"
+                ],
+                "summary": "Añadir una reseña a una película",
+                "description": "Permite a un usuario autenticado añadir una reseña a una película específica.",
+                "operationId": "storeResena",
+                "parameters": [
+                    {
+                        "name": "peliculaId",
+                        "in": "path",
+                        "description": "ID único de la película",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "calificacion"
+                                ],
+                                "properties": {
+                                    "calificacion": {
+                                        "description": "Calificación del 1 al 5",
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "comentario": {
+                                        "description": "Comentario opcional sobre la película",
+                                        "type": "string",
+                                        "example": "Gran película con excelentes efectos especiales."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reseña añadida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Resena"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación de los datos"
+                    },
+                    "403": {
+                        "description": "Reseña duplicada (ya existe una reseña del usuario para esta película)"
+                    }
+                }
+            }
+        },
+        "/peliculas/resenas/{id}": {
+            "delete": {
+                "tags": [
+                    "Reseñas"
+                ],
+                "summary": "Eliminar una reseña",
+                "description": "Permite a un usuario autenticado eliminar su propia reseña o a un administrador eliminar cualquier reseña.",
+                "operationId": "deleteResena",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID único de la reseña",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reseña eliminada con éxito"
+                    },
+                    "403": {
+                        "description": "Acción no autorizada"
+                    },
+                    "404": {
+                        "description": "Reseña no encontrada"
+                    }
+                }
+            }
+        },
+        "/user/dashboard": {
+            "get": {
+                "tags": [
+                    "Usuario"
+                ],
+                "summary": "Mostrar el panel de control del usuario",
+                "description": "Devuelve el panel de control del usuario autenticado con una lista de las reseñas realizadas.",
+                "operationId": "getUserDashboard",
+                "responses": {
+                    "200": {
+                        "description": "Panel de usuario cargado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "resenas": {
+                                            "description": "Lista de reseñas del usuario",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Resena"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado (Debe iniciar sesión)"
+                    },
+                    "403": {
+                        "description": "Acción no autorizada (Solo usuarios con rol USER pueden acceder)"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Actor": {
+                "properties": {
+                    "id": {
+                        "description": "ID único del actor",
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "description": "Nombre del actor",
+                        "type": "string"
+                    },
+                    "fecha_nac": {
+                        "description": "Fecha de nacimiento del actor",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "biografia": {
+                        "description": "Biografía del actor",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Director": {
+                "properties": {
+                    "id": {
+                        "description": "ID único del director",
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "description": "Nombre del director",
+                        "type": "string"
+                    },
+                    "fecha_nac": {
+                        "description": "Fecha de nacimiento del director",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "biografia": {
+                        "description": "Biografía del director",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Genero": {
+                "properties": {
+                    "id": {
+                        "description": "ID único del género",
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "description": "Nombre del género",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Pelicula": {
+                "required": [
+                    "titulo",
+                    "estreno",
+                    "director_id",
+                    "sinopsis"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "ID único de la película",
+                        "type": "integer"
+                    },
+                    "titulo": {
+                        "description": "Título de la película",
+                        "type": "string"
+                    },
+                    "generos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Genero"
+                        }
+                    },
+                    "estreno": {
+                        "description": "Fecha de estreno",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "director": {
+                        "$ref": "#/components/schemas/Director"
+                    },
+                    "sinopsis": {
+                        "description": "Sinopsis de la película",
+                        "type": "string"
+                    },
+                    "reparto": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Actor"
+                        }
+                    },
+                    "imagen": {
+                        "description": "URL de la imagen",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "description": "Fecha de creación",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "Fecha de última actualización",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Premio": {
+                "properties": {
+                    "id": {
+                        "description": "ID único del premio",
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "description": "Nombre del premio",
+                        "type": "string"
+                    },
+                    "categoria": {
+                        "description": "Categoría del premio",
+                        "type": "string"
+                    },
+                    "anio": {
+                        "description": "Año en el que se otorgó el premio",
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "Resena": {
+                "required": [
+                    "id",
+                    "calificacion",
+                    "comentario",
+                    "user_id",
+                    "pelicula_id"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "ID único de la reseña",
+                        "type": "integer"
+                    },
+                    "calificacion": {
+                        "description": "Calificación de la película (1 a 5)",
+                        "type": "integer"
+                    },
+                    "comentario": {
+                        "description": "Comentario del usuario",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "description": "ID del usuario que dejó la reseña",
+                        "type": "integer"
+                    },
+                    "pelicula_id": {
+                        "description": "ID de la película asociada a la reseña",
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "description": "Fecha de creación de la reseña",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "Fecha de última actualización de la reseña",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Actores",
+            "description": "Actores"
+        },
+        {
+            "name": "Admin Dashboard",
+            "description": "Admin Dashboard"
+        },
+        {
+            "name": "Directores",
+            "description": "Directores"
+        },
+        {
+            "name": "Generos",
+            "description": "Generos"
+        },
+        {
+            "name": "Inicio",
+            "description": "Inicio"
+        },
+        {
+            "name": "Peliculas",
+            "description": "Peliculas"
+        },
+        {
+            "name": "Premios",
+            "description": "Premios"
+        },
+        {
+            "name": "Reseñas",
+            "description": "Reseñas"
+        },
+        {
+            "name": "Usuario",
+            "description": "Usuario"
+        }
+    ]
+}
