@@ -49,15 +49,6 @@ services:
                 - '${DB_USERNAME}'
             retries: 3
             timeout: 5s
-
-    adminer-postgres:
-        image: adminer:latest
-        env_file:
-            - .env
-        ports:
-            - 8080:8080
-        networks:
-            - sail
     redis:
         image: 'redis:alpine'
         ports:
