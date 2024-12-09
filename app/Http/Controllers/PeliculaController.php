@@ -12,14 +12,106 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+
 class PeliculaController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/peliculas",
+     *     summary="Obtener una lista de películas",
+     *     description="Devuelve una lista paginada de películas ordenadas por fecha de estreno, con opción de búsqueda.",
+     *     operationId="getPeliculas",
+     *     tags={"Peliculas"},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Cadena de texto para buscar películas por título o descripción.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de la página para la paginación.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de películas obtenida con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="current_page", type="integer", description="Página actual."),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Pelicula")),
+     *             @OA\Property(property="total", type="integer", description="Número total de elementos."),
+     *             @OA\Property(property="last_page", type="integer", description="Última página disponible.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error en el servidor"
+     *     )
+     * )
+     */
+
     public function index(Request $request)
     {
         $peliculas = Pelicula::search($request->search)->orderBy('estreno', 'desc')->paginate(4);
 
         return view('peliculas.index', compact('peliculas'));
     }
+
+    /**
+     * @OA\Get(
+     *     path="/peliculas/{id}",
+     *     summary="Obtener detalles de una película",
+     *     description="Devuelve la información completa de una película específica junto con sus géneros, director, premios y actores.",
+     *     operationId="getPelicula",
+     *     tags={"Peliculas"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único de la película",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="referer",
+     *         in="query",
+     *         description="URL de referencia opcional para redirigir después de la vista",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="string",
+     *             format="url"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detalles de la película obtenidos con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", description="ID único de la película"),
+     *             @OA\Property(property="titulo", type="string", description="Título de la película"),
+     *             @OA\Property(property="descripcion", type="string", description="Descripción de la película"),
+     *             @OA\Property(property="estreno", type="string", format="date", description="Fecha de estreno"),
+     *             @OA\Property(property="generos", type="array", @OA\Items(ref="#/components/schemas/Genero")),
+     *             @OA\Property(property="director", ref="#/components/schemas/Director"),
+     *             @OA\Property(property="premios", type="array", @OA\Items(ref="#/components/schemas/Premio")),
+     *             @OA\Property(property="actores", type="array", @OA\Items(ref="#/components/schemas/Actor"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Película no encontrada"
+     *     )
+     * )
+     */
 
     public function show($id, Request $request)
     {
@@ -28,6 +120,35 @@ class PeliculaController extends Controller
 
         return view('peliculas.show', compact('pelicula', 'referer'));
     }
+
+    /**
+     * @OA\Get(
+     *     path="/peliculas/create",
+     *     summary="Mostrar formulario para crear una nueva película",
+     *     description="Devuelve las opciones necesarias (géneros, directores y actores activos) para crear una nueva película. Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="getPeliculaCreate",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Formulario cargado con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="generos", type="array", @OA\Items(ref="#/components/schemas/Genero")),
+     *             @OA\Property(property="directores", type="array", @OA\Items(ref="#/components/schemas/Director")),
+     *             @OA\Property(property="actores", type="array", @OA\Items(ref="#/components/schemas/Actor"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
 
     public function create()
     {
@@ -39,6 +160,52 @@ class PeliculaController extends Controller
         return view('peliculas.create', compact('pelicula', 'generos', 'directores', 'actores'));
 
     }
+
+    /**
+     * @OA\Post(
+     *     path="/peliculas/store",
+     *     summary="Crear una nueva película",
+     *     description="Permite crear un registro de película junto con sus géneros, reparto, y otros detalles. Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="createPelicula",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"titulo", "generos", "estreno", "director_id", "sinopsis"},
+     *             @OA\Property(property="titulo", type="string", description="Título de la película", example="Inception"),
+     *             @OA\Property(property="generos", type="array", description="IDs de géneros asociados",
+     *                 @OA\Items(type="integer", example=1)
+     *             ),
+     *             @OA\Property(property="estreno", type="string", format="date", description="Fecha de estreno (YYYY-MM-DD)", example="2023-12-01"),
+     *             @OA\Property(property="director_id", type="integer", description="ID del director", example=2),
+     *             @OA\Property(property="sinopsis", type="string", description="Sinopsis de la película", example="Un ladrón que roba secretos corporativos usando tecnología de sueños..."),
+     *             @OA\Property(property="reparto", type="array", description="IDs de actores asociados",
+     *                 @OA\Items(type="integer", example=3)
+     *             ),
+     *             @OA\Property(property="imagen", type="string", format="binary", description="Archivo de imagen de la película (opcional)")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Película creada con éxito",
+     *         @OA\JsonContent(ref="#/components/schemas/Pelicula")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación de los datos"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
 
     public function store(Request $request)
     {
@@ -108,6 +275,58 @@ class PeliculaController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/peliculas/{id}/edit",
+     *     summary="Obtener los datos necesarios para editar una película",
+     *     description="Devuelve la información de una película específica junto con sus géneros, director, reparto seleccionado y actores disponibles para editar. Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="editPelicula",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único de la película",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Datos de la película obtenidos con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="pelicula", ref="#/components/schemas/Pelicula"),
+     *             @OA\Property(property="generos", type="array", description="Lista de géneros disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Genero")
+     *             ),
+     *             @OA\Property(property="directores", type="array", description="Lista de directores activos disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Director")
+     *             ),
+     *             @OA\Property(property="repartoSeleccionado", type="array", description="Lista de actores seleccionados para la película",
+     *                 @OA\Items(ref="#/components/schemas/Actor")
+     *             ),
+     *             @OA\Property(property="actoresDisponibles", type="array", description="Lista de actores disponibles para agregar al reparto",
+     *                 @OA\Items(ref="#/components/schemas/Actor")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Película no encontrada"
+     *     )
+     * )
+     */
+
     public function edit($id)
     {
         $pelicula = Pelicula::with(['generos', 'director', 'actores'])->findOrFail($id);
@@ -131,6 +350,64 @@ class PeliculaController extends Controller
             'actoresDisponibles'));
     }
 
+    /**
+     * @OA\Put(
+     *     path="/peliculas/{id}",
+     *     summary="Actualizar una película existente",
+     *     description="Actualiza los detalles de una película, incluyendo géneros, reparto, y otros datos. Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="updatePelicula",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único de la película",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"titulo", "generos", "estreno", "director_id", "sinopsis", "reparto"},
+     *             @OA\Property(property="titulo", type="string", description="Título de la película", example="The Dark Knight"),
+     *             @OA\Property(property="generos", type="array", description="IDs de géneros asociados",
+     *                 @OA\Items(type="integer", example=1)
+     *             ),
+     *             @OA\Property(property="estreno", type="string", format="date", description="Fecha de estreno (YYYY-MM-DD)", example="2008-07-18"),
+     *             @OA\Property(property="director_id", type="integer", description="ID del director", example=3),
+     *             @OA\Property(property="sinopsis", type="string", description="Sinopsis de la película", example="Un caballero oscuro protege Gotham de un caótico villano conocido como el Joker."),
+     *             @OA\Property(property="reparto", type="array", description="IDs de actores asociados",
+     *                 @OA\Items(type="integer", example=5)
+     *             ),
+     *             @OA\Property(property="imagen", type="string", format="binary", description="Archivo de imagen de la película (opcional)")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Película actualizada con éxito",
+     *         @OA\JsonContent(ref="#/components/schemas/Pelicula")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación de los datos"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Película no encontrada"
+     *     )
+     * )
+     */
     public function update(Request $request, $id)
     {
 
@@ -199,6 +476,42 @@ class PeliculaController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/peliculas/{id}",
+     *     summary="Eliminar una película",
+     *     description="Elimina una película específica de forma lógica (soft delete). Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="deletePelicula",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único de la película",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Película eliminada con éxito"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Película no encontrada"
+     *     )
+     * )
+     */
+
     public function destroy($id)
     {
         try {
@@ -212,12 +525,78 @@ class PeliculaController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/peliculas/eliminados",
+     *     summary="Listar películas eliminadas",
+     *     description="Obtiene una lista paginada de películas que han sido eliminadas lógicamente. Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="getDeletedPeliculas",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de películas eliminadas obtenida con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="current_page", type="integer", description="Página actual."),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Pelicula")),
+     *             @OA\Property(property="total", type="integer", description="Número total de elementos."),
+     *             @OA\Property(property="last_page", type="integer", description="Última página disponible.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
+
     public function deleted()
     {
         $peliculas = Pelicula::onlyTrashed()->paginate(4);
 
         return view('peliculas.deleted', compact('peliculas'));
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/peliculas/{id}/restaurar",
+     *     summary="Restaurar una película eliminada",
+     *     description="Restaura una película específica que fue eliminada lógicamente. Solo accesible para usuarios con rol ADMIN.",
+     *     operationId="restorePelicula",
+     *     tags={"Peliculas"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único de la película",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Película restaurada con éxito"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Película no encontrada"
+     *     )
+     * )
+     */
 
     public function restore($id)
     {

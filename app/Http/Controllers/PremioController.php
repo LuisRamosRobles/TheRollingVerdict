@@ -11,6 +11,49 @@ use Illuminate\Http\Request;
 
 class PremioController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/premios",
+     *     summary="Obtener una lista de premios",
+     *     description="Devuelve una lista paginada de premios ordenados por año (descendente) y nombre (ascendente), con opción de búsqueda por nombre.",
+     *     operationId="getPremios",
+     *     tags={"Premios"},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Cadena de texto para buscar premios por nombre.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de la página para la paginación.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de premios obtenida con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="current_page", type="integer", description="Página actual."),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Premio")),
+     *             @OA\Property(property="total", type="integer", description="Número total de elementos."),
+     *             @OA\Property(property="last_page", type="integer", description="Última página disponible.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error en el servidor"
+     *     )
+     * )
+     */
+
     public function index(Request $request)
     {
         $premios = Premio::search($request->search)
@@ -21,12 +64,88 @@ class PremioController extends Controller
         return view('premios.index', compact('premios'));
     }
 
+    /**
+     * @OA\Get(
+     *     path="/premios/{id}",
+     *     summary="Obtener detalles de un premio",
+     *     description="Devuelve la información completa de un premio específico.",
+     *     operationId="getPremio",
+     *     tags={"Premios"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del premio",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detalles del premio obtenidos con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", description="ID único del premio"),
+     *             @OA\Property(property="nombre", type="string", description="Nombre del premio"),
+     *             @OA\Property(property="anio", type="integer", description="Año en que se otorgó el premio"),
+     *             @OA\Property(property="categoria", type="string", description="Categoría del premio"),
+     *             @OA\Property(property="entidad", type="string", description="Entidad o persona que recibió el premio"),
+     *             @OA\Property(property="descripcion", type="string", description="Descripción adicional del premio", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Premio no encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error en el servidor"
+     *     )
+     * )
+     */
+
     public function show($id)
     {
         $premio = Premio::findOrFail($id);
 
         return view('premios.show', compact('premio'));
     }
+
+    /**
+     * @OA\Get(
+     *     path="/premios/create",
+     *     summary="Mostrar formulario para crear un premio",
+     *     description="Devuelve el formulario necesario para crear un nuevo premio. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="createPremio",
+     *     tags={"Premios"},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Formulario cargado con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="premio", ref="#/components/schemas/Premio"),
+     *             @OA\Property(property="peliculas", type="array", description="Lista de películas disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Pelicula")
+     *             ),
+     *             @OA\Property(property="directores", type="array", description="Lista de directores disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Director")
+     *             ),
+     *             @OA\Property(property="actores", type="array", description="Lista de actores disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Actor")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
 
     public function create()
     {
@@ -37,6 +156,47 @@ class PremioController extends Controller
 
         return view('premios.create', compact('premio','peliculas', 'directores', 'actores'));
     }
+
+    /**
+     * @OA\Post(
+     *     path="/premios/store",
+     *     summary="Crear un nuevo premio",
+     *     description="Crea un nuevo premio y lo asocia a una película, director o actor. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="storePremio",
+     *     tags={"Premios"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"nombre", "categoria", "anio", "entidad_type", "entidad_id"},
+     *             @OA\Property(property="nombre", type="string", description="Nombre del premio", example="Óscar"),
+     *             @OA\Property(property="categoria", type="string", description="Categoría del premio", example="Mejor Película"),
+     *             @OA\Property(property="anio", type="integer", description="Año del premio", example=2023),
+     *             @OA\Property(property="entidad_type", type="string", description="Tipo de entidad asociada al premio", example="App\Models\Pelicula"),
+     *             @OA\Property(property="entidad_id", type="integer", description="ID de la entidad asociada al premio", example=1),
+     *             @OA\Property(property="pelicula_id", type="integer", description="ID de la película asociada al premio (opcional)", nullable=true, example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Premio creado con éxito",
+     *         @OA\JsonContent(ref="#/components/schemas/Premio")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación de los datos"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
 
     public function store(Request $request)
     {
@@ -190,6 +350,55 @@ class PremioController extends Controller
 
     }
 
+    /**
+     * @OA\Get(
+     *     path="/premios/{id}/edit",
+     *     summary="Mostrar formulario para editar un premio",
+     *     description="Devuelve el formulario necesario para editar un premio existente. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="editPremio",
+     *     tags={"Premios"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del premio",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Formulario cargado con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="premio", ref="#/components/schemas/Premio"),
+     *             @OA\Property(property="peliculas", type="array", description="Lista de películas disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Pelicula")
+     *             ),
+     *             @OA\Property(property="directores", type="array", description="Lista de directores disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Director")
+     *             ),
+     *             @OA\Property(property="actores", type="array", description="Lista de actores disponibles",
+     *                 @OA\Items(ref="#/components/schemas/Actor")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Premio no encontrado"
+     *     )
+     * )
+     */
+
     public function edit($id)
     {
         $premio = Premio::findOrFail($id);
@@ -201,6 +410,60 @@ class PremioController extends Controller
 
         return view('premios.edit', compact('premio', 'peliculas', 'directores', 'actores'));
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/premios/{id}",
+     *     summary="Actualizar un premio existente",
+     *     description="Actualiza los datos de un premio existente y los asocia a una película, director o actor. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="updatePremio",
+     *     tags={"Premios"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del premio",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"nombre", "categoria", "anio", "entidad_type", "entidad_id"},
+     *             @OA\Property(property="nombre", type="string", description="Nombre del premio", example="Óscar"),
+     *             @OA\Property(property="categoria", type="string", description="Categoría del premio", example="Mejor Película"),
+     *             @OA\Property(property="anio", type="integer", description="Año del premio", example=2023),
+     *             @OA\Property(property="entidad_type", type="string", description="Tipo de entidad asociada al premio", example="App\Models\Pelicula"),
+     *             @OA\Property(property="entidad_id", type="integer", description="ID de la entidad asociada al premio", example=1),
+     *             @OA\Property(property="pelicula_id", type="integer", description="ID de la película asociada al premio (opcional)", nullable=true, example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Premio actualizado con éxito",
+     *         @OA\JsonContent(ref="#/components/schemas/Premio")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación de los datos"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Premio no encontrado"
+     *     )
+     * )
+     */
 
     public function update(Request $request, $id)
     {
@@ -363,6 +626,42 @@ class PremioController extends Controller
 
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/premios/{id}",
+     *     summary="Eliminar un premio",
+     *     description="Elimina un premio específico de forma lógica (soft delete). Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="deletePremio",
+     *     tags={"Premios"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del premio",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Premio eliminado correctamente"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Premio no encontrado"
+     *     )
+     * )
+     */
+
     public function destroy($id)
     {
         try {
@@ -375,12 +674,87 @@ class PremioController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/premios/eliminados",
+     *     summary="Listar premios eliminados",
+     *     description="Obtiene una lista paginada de premios que han sido eliminados lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="getDeletedPremios",
+     *     tags={"Premios"},
+     *
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de la página para la paginación.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de premios eliminados obtenida con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="current_page", type="integer", description="Página actual."),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Premio")),
+     *             @OA\Property(property="total", type="integer", description="Número total de elementos."),
+     *             @OA\Property(property="last_page", type="integer", description="Última página disponible.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
+
     public function deleted()
     {
         $premios = Premio::onlyTrashed()->paginate(4);
 
         return view('premios.deleted', compact('premios'));
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/premios/{id}/restaurar",
+     *     summary="Restaurar un premio eliminado",
+     *     description="Restaura un premio específico que fue eliminado lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="restorePremio",
+     *     tags={"Premios"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del premio",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Premio restaurado con éxito"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Premio no encontrado"
+     *     )
+     * )
+     */
 
     public function restore($id)
     {
@@ -414,6 +788,21 @@ class PremioController extends Controller
             'entidad_type.in' => 'El tipo de entidad no es el correcto.'
         ];
     }
+
+    /**
+     * Obtiene la imagen asociada a un premio según su nombre.
+     *
+     * Este método toma un nombre de premio, lo convierte a minúsculas y busca
+     * en un array predefinido de nombres de premios con sus respectivas rutas de imagen.
+     * Si no encuentra una coincidencia, devuelve una imagen por defecto.
+     *
+     * @param string $nombre Nombre del premio.
+     * @return string Ruta de la imagen asociada al premio o la imagen por defecto.
+     *
+     * Ejemplo:
+     * - Si el nombre es "Oscar", retornará "premios/oscar.jpg".
+     * - Si el nombre no está en el array (por ejemplo, "Emmy"), retornará la imagen por defecto.
+     */
 
     public function getImagenPorNombre($nombre)
     {

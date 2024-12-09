@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @OA\Schema(
+ *     schema="Genero",
+ *     @OA\Property(property="id", type="integer", description="ID único del género"),
+ *     @OA\Property(property="nombre", type="string", description="Nombre del género")
+ * )
+ */
+
 class Genero extends Model
 {
     use HasFactory;

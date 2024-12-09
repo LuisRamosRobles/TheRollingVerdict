@@ -9,14 +9,109 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+
 class ActorController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/actores",
+     *     summary="Obtener una lista de actores",
+     *     description="Devuelve una lista paginada de actores ordenados alfabéticamente, con opción de búsqueda por nombre.",
+     *     operationId="getActores",
+     *     tags={"Actores"},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Cadena de texto para buscar actores por nombre.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de la página para la paginación.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de actores obtenida con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="current_page", type="integer", description="Página actual."),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Actor")),
+     *             @OA\Property(property="total", type="integer", description="Número total de elementos."),
+     *             @OA\Property(property="last_page", type="integer", description="Última página disponible.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error en el servidor"
+     *     )
+     * )
+     */
+
     public function index(Request $request)
     {
         $actores = Actor::search($request->search)->orderBy('nombre', 'asc')->paginate(4);
 
         return view('actores.index', compact('actores'));
     }
+
+    /**
+     * @OA\Get(
+     *     path="/actores/{id}",
+     *     summary="Obtener detalles de un actor",
+     *     description="Devuelve la información completa de un actor específico, junto con una lista paginada de películas y premios asociados.",
+     *     operationId="getActor",
+     *     tags={"Actores"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del actor",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de la página para la paginación de películas asociadas.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detalles del actor obtenidos con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", description="ID único del actor"),
+     *             @OA\Property(property="nombre", type="string", description="Nombre del actor"),
+     *             @OA\Property(property="peliculas", type="array", description="Lista de películas asociadas",
+     *                 @OA\Items(ref="#/components/schemas/Pelicula")
+     *             ),
+     *             @OA\Property(property="premios", type="array", description="Lista de premios asociados",
+     *                 @OA\Items(ref="#/components/schemas/Premio")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Actor no encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error en el servidor"
+     *     )
+     * )
+     */
 
     public function show($id, Request $request)
     {
@@ -27,12 +122,82 @@ class ActorController extends Controller
         return view('actores.show', compact('actor', 'peliculas', 'referer'));
     }
 
+    /**
+     * @OA\Get(
+     *     path="/actores/create",
+     *     summary="Mostrar formulario para crear un actor",
+     *     description="Devuelve el formulario necesario para crear un nuevo actor. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="createActor",
+     *     tags={"Actores"},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Formulario cargado con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="actor", ref="#/components/schemas/Actor")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
+
     public function create()
     {
         $actor = new Actor();
 
         return view('actores.create', compact('actor'));
     }
+
+    /**
+     * @OA\Post(
+     *     path="/actores/store",
+     *     summary="Crear un nuevo actor",
+     *     description="Crea un nuevo actor y guarda los datos enviados, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="storeActor",
+     *     tags={"Actores"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"nombre"},
+     *             @OA\Property(property="nombre", type="string", description="Nombre del actor", example="Leonardo DiCaprio"),
+     *             @OA\Property(property="fecha_nac", type="string", format="date", description="Fecha de nacimiento del actor (YYYY-MM-DD)", example="1974-11-11"),
+     *             @OA\Property(property="lugar_nac", type="string", description="Lugar de nacimiento del actor", example="Los Ángeles"),
+     *             @OA\Property(property="biografia", type="string", description="Breve biografía del actor", example="Actor ganador de un Óscar por The Revenant."),
+     *             @OA\Property(property="inicio_actividad", type="integer", description="Año de inicio de actividad del actor", example=1990),
+     *             @OA\Property(property="fin_actividad", type="integer", description="Año de fin de actividad del actor", example=2023),
+     *             @OA\Property(property="activo", type="boolean", description="Estado del actor (activo o inactivo)", example=true),
+     *             @OA\Property(property="imagen", type="string", format="binary", description="Archivo de imagen del actor (opcional)")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Actor creado con éxito",
+     *         @OA\JsonContent(ref="#/components/schemas/Actor")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación de los datos"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
 
     public function store(Request $request)
     {
@@ -88,6 +253,49 @@ class ActorController extends Controller
             ])->withInput();
         }
     }
+    /**
+     * @OA\Get(
+     *     path="/actores/{id}/edit",
+     *     summary="Mostrar formulario para editar un actor",
+     *     description="Devuelve el formulario necesario para editar un actor existente. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="editActor",
+     *     tags={"Actores"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del actor",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Formulario cargado con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="actor", ref="#/components/schemas/Actor"),
+     *             @OA\Property(property="peliculas", type="array", description="Lista de películas disponibles para asociación",
+     *                 @OA\Items(ref="#/components/schemas/Pelicula")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Actor no encontrado"
+     *     )
+     * )
+     */
+
 
     public function edit($id)
     {
@@ -96,6 +304,62 @@ class ActorController extends Controller
 
         return view('actores/edit', compact('actor', 'peliculas'));
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/actores/{id}",
+     *     summary="Actualizar un actor existente",
+     *     description="Actualiza los datos de un actor existente, incluida una imagen opcional. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="updateActor",
+     *     tags={"Actores"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del actor",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"nombre"},
+     *             @OA\Property(property="nombre", type="string", description="Nombre del actor", example="Morgan Freeman"),
+     *             @OA\Property(property="fecha_nac", type="string", format="date", description="Fecha de nacimiento del actor (YYYY-MM-DD)", example="1937-06-01"),
+     *             @OA\Property(property="lugar_nac", type="string", description="Lugar de nacimiento del actor", example="Memphis"),
+     *             @OA\Property(property="biografia", type="string", description="Breve biografía del actor", example="Actor conocido por películas como Shawshank Redemption."),
+     *             @OA\Property(property="inicio_actividad", type="integer", description="Año de inicio de actividad del actor", example=1955),
+     *             @OA\Property(property="fin_actividad", type="integer", description="Año de fin de actividad del actor", example=2023),
+     *             @OA\Property(property="activo", type="boolean", description="Estado del actor (activo o inactivo)", example=true),
+     *             @OA\Property(property="imagen", type="string", format="binary", description="Archivo de imagen del actor (opcional)")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Actor actualizado con éxito",
+     *         @OA\JsonContent(ref="#/components/schemas/Actor")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación de los datos"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Actor no encontrado"
+     *     )
+     * )
+     */
 
     public function update(Request $request, $id)
     {
@@ -149,6 +413,42 @@ class ActorController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/actores/{id}",
+     *     summary="Eliminar un actor",
+     *     description="Elimina un actor específico de forma lógica (soft delete). Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="deleteActor",
+     *     tags={"Actores"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del actor",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Actor eliminado correctamente"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Actor no encontrado"
+     *     )
+     * )
+     */
+
     public function destroy($id)
     {
         try {
@@ -163,12 +463,87 @@ class ActorController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/actores/eliminados",
+     *     summary="Listar actores eliminados",
+     *     description="Obtiene una lista paginada de actores que han sido eliminados lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="getDeletedActores",
+     *     tags={"Actores"},
+     *
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de la página para la paginación.",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de actores eliminados obtenida con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="current_page", type="integer", description="Página actual."),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Actor")),
+     *             @OA\Property(property="total", type="integer", description="Número total de elementos."),
+     *             @OA\Property(property="last_page", type="integer", description="Última página disponible.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     )
+     * )
+     */
+
     public function deleted()
     {
         $actores = Actor::onlyTrashed()->paginate(4);
 
         return view('actores.deleted', compact('actores'));
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/actores/{id}/restaurar",
+     *     summary="Restaurar un actor eliminado",
+     *     description="Restaura un actor específico que fue eliminado lógicamente. Solo accesible para usuarios autenticados con rol ADMIN.",
+     *     operationId="restoreActor",
+     *     tags={"Actores"},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID único del actor",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Actor restaurado con éxito"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Acceso denegado (Usuario no autorizado para realizar esta acción)"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado (Debe iniciar sesión)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Actor no encontrado"
+     *     )
+     * )
+     */
 
     public function restore($id)
     {
@@ -216,6 +591,15 @@ class ActorController extends Controller
         ];
     }
 
+    /**
+     * Valida las fechas relacionadas con un actor y devuelve errores específicos.
+     *
+     * @param int|null $nacimientoYear Año de nacimiento.
+     * @param int|null $inicioActividadYear Año de inicio de actividad.
+     * @param int|null $finActividadYear Año de fin de actividad.
+     * @return array|null Devuelve un array de errores o null si no hay errores.
+     */
+
     public function validarFechas($nacimientoYear, $inicioActividadYear, $finActividadYear)
     {
 
@@ -241,7 +625,13 @@ class ActorController extends Controller
 
     }
 
-
+    /**
+     * Procesa y guarda una imagen asociada a un actor.
+     *
+     * @param Actor $actor Instancia del actor.
+     * @param UploadedFile $imagen Archivo de imagen cargado.
+     * @return string Ruta donde se almacenó la imagen.
+     */
 
     private function procesarImagen($actor, $imagen)
     {

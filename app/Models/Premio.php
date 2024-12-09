@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @OA\Schema(
+ *     schema="Premio",
+ *     @OA\Property(property="id", type="integer", description="ID único del premio"),
+ *     @OA\Property(property="nombre", type="string", description="Nombre del premio"),
+ *     @OA\Property(property="categoria", type="string", description="Categoría del premio"),
+ *     @OA\Property(property="anio", type="integer", description="Año en el que se otorgó el premio")
+ * )
+ */
+
 class Premio extends Model
 {
     use HasFactory;

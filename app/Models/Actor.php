@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @OA\Schema(
+ *     schema="Actor",
+ *     @OA\Property(property="id", type="integer", description="ID único del actor"),
+ *     @OA\Property(property="nombre", type="string", description="Nombre del actor"),
+ *     @OA\Property(property="fecha_nac", type="string", format="date", description="Fecha de nacimiento del actor"),
+ *     @OA\Property(property="biografia", type="string", description="Biografía del actor")
+ * )
+ */
+
 class Actor extends Model
 {
     use HasFactory;

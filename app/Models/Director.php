@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @OA\Schema(
+ *     schema="Director",
+ *     @OA\Property(property="id", type="integer", description="ID único del director"),
+ *     @OA\Property(property="nombre", type="string", description="Nombre del director"),
+ *     @OA\Property(property="fecha_nac", type="string", format="date", description="Fecha de nacimiento del director"),
+ *     @OA\Property(property="biografia", type="string", description="Biografía del director")
+ * )
+ */
+
 class Director extends Model
 {
     use HasFactory;
