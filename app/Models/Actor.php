@@ -60,7 +60,7 @@ class Actor extends Model
             return null;
         }
 
-        $fin = $this->fin_actividad ?? Carbon::now()->year; // Usa el año actual si no hay fecha de retiro
+        $fin = $this->fin_actividad ?? Carbon::now()->year;
         return $fin - $this->inicio_actividad;
     }
 

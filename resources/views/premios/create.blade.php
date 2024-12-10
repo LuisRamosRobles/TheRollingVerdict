@@ -190,9 +190,6 @@
                 }
             });
 
-
-
-
             if (oldEntidadType === "App\Models\Director") {
                 directorRadio.checked = true;
                 peliculaSelect.style.display = "block";

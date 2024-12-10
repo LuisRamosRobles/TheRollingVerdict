@@ -399,9 +399,6 @@ class DirectorController extends Controller
             $director->update($request->except('imagen'));
 
 
-
-
-
             if ($request->hasFile('imagen')) {
 
                 $director->imagen = $this->procesarImagen($director, $request->file('imagen'));

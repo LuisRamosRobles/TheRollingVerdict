@@ -235,18 +235,13 @@ class PeliculaController extends Controller
                 ? Carbon::parse($request->input('estreno'))->year
                 : null;
 
-            $anioSiguienteEstreno = $request->filled('estreno')
-                ? Carbon::parse($request->input('estreno'))->addYear()->year
-                : null;
 
             if ($anioEstreno && $inicioActividadYear && $anioEstreno < $inicioActividadYear) {
                 return redirect()->back()->withErrors([
-                    'estreno' => "La fecha de estreno ($anioEstreno) no puede ser anterior al inicio de actividad del director ($inicioActividadYear)."
+                    'estreno' => "La fecha de estreno ($anioEstreno) no puede ser anterior al inicio
+                    de actividad del director ($inicioActividadYear)."
                 ])->withInput();
             }
-
-
-
 
             $pelicula = Pelicula::create($request->except(['imagen', 'generos', 'reparto']));
 
@@ -435,13 +430,11 @@ class PeliculaController extends Controller
                 ? Carbon::parse($request->input('estreno'))->year
                 : null;
 
-            $anioSiguienteEstreno = $request->filled('estreno')
-                ? Carbon::parse($request->input('estreno'))->addYear()->year
-                : null;
 
             if ($anioEstreno && $inicioActividadYear && $anioEstreno < $inicioActividadYear) {
                 return redirect()->back()->withErrors([
-                    'estreno' => "La fecha de estreno ($anioEstreno) no puede ser anterior al inicio de actividad del director ($inicioActividadYear)."
+                    'estreno' => "La fecha de estreno ($anioEstreno) no puede ser anterior al inicio
+                    de actividad del director ($inicioActividadYear)."
                 ])->withInput();
             }
 
@@ -470,7 +463,8 @@ class PeliculaController extends Controller
             }
 
             $pelicula->save();
-            return redirect()->route('peliculas.show', $pelicula->id)->with('success', 'Película actualizada con éxito.');
+            return redirect()->route('peliculas.show', $pelicula->id)
+                ->with('success', 'Película actualizada con éxito.');
         } catch (\Exception $e){
             return redirect()->back()->withErrors(['error' => 'Error al actualizar la película.' . $e->getMessage()]);
         }

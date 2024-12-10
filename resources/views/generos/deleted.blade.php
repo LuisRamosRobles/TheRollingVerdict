@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    <a class="btn btn-secondary mx-2 mb-4" href="{{ route('admin.generos') }}">Volver</a>
+    <a class="btn btn-secondary mx-2 mb-4 mt-5" href="{{ route('admin.generos') }}">Volver</a>
 
 @endsection
 @include('footer')

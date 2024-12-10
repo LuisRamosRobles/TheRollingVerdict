@@ -169,7 +169,6 @@
                 repartoSeleccionado.appendChild(option);
             });
         });
-
     </script>
 
 

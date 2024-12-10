@@ -485,6 +485,8 @@ class PremioController extends Controller
         ];
 
         $request->validate($rules, $this->mensajes());
+
+
         try {
 
             $premio = Premio::findOrFail($id);
@@ -814,7 +816,6 @@ class PremioController extends Controller
             'goya' => 'premios/goya.jpg',
             'saturn award' => 'premios/saturn_award.jpg',
             'directors guild of america' => 'premios/DGAAward.png'
-
         ];
 
         $nombreMin = strtolower($nombre);

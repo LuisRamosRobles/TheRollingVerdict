@@ -253,6 +253,8 @@ class ActorController extends Controller
             ])->withInput();
         }
     }
+
+
     /**
      * @OA\Get(
      *     path="/actores/{id}/edit",
@@ -295,7 +297,6 @@ class ActorController extends Controller
      *     )
      * )
      */
-
 
     public function edit($id)
     {

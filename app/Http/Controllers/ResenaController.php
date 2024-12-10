@@ -103,7 +103,7 @@ class ResenaController extends Controller
 
         if (Resena::where('user_id', auth()->id())->where('pelicula_id', $peliculaId)->exists()) {
             return redirect()->back()->withErrors([
-                'error' => 'Ya has dejado una reseña para esta película. Borra la hayas dejado para poner una nueva.'
+                'error' => 'Ya has dejado una reseña para esta película. Borra la que hayas dejado para poner una nueva.'
             ]);
         }
 

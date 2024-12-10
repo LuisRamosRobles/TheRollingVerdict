@@ -7,7 +7,7 @@
         <span class="navicon"></span>
     </label>
     <ul class="menu">
-        <li><a href="{{ route('peliculas.index') }}">Peliculas</a></li>
+        <li><a href="{{ route('peliculas.index') }}">Películas</a></li>
         <li><a href="{{ route('generos.index') }}">Géneros</a></li>
         <li><a href="{{ route('directores.index') }}">Directores</a></li>
         <li><a href="{{ route('actores.index') }}">Actores</a></li>

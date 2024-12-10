@@ -7,6 +7,17 @@
 
 @section('content')
 
+    @if(session('success'))
+        <br>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <br>
+    @endif
+
     <div class="premio-detalle">
         <div class="info">
             <h1>{{ $premio->nombre }}</h1>

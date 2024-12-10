@@ -68,7 +68,7 @@
             </div>
             <div class="mt-2">
                 <button type="button" class="btn btn-primary" id="agregar-actor">Agregar &gt;&gt;</button>
-                <button type="button" class="btn btn-secondary" id="remover-actor">&lt;&lt; Remover</button>
+                <button type="button" class="btn btn-secondary" id="remover-actor">&lt;&lt; Descartar</button>
             </div>
         </div>
 

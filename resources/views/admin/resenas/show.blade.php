@@ -4,6 +4,19 @@
 @section('title', 'Reseñas de ' . $pelicula->titulo)
 
 @section('content')
+
+    @if(session('success'))
+        <br>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <br>
+    @endif
+
+
     <h1>Reseñas de "{{ $pelicula->titulo }}"</h1>
     <a class="btn btn-secondary mb-3" href="{{ route('admin.resenas') }}">Volver</a>
     <div class="table-responsive">
